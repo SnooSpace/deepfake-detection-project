@@ -143,6 +143,18 @@ def start(path, cleanup, trusted=False):
 @app.get("/")
 def index(): return FileResponse(HERE / "index.html")
 
+@app.get("/logo.png")
+def logo():
+    p = HERE / "logo.png"
+    if not p.exists(): raise HTTPException(404)
+    return FileResponse(p)
+
+@app.get("/logo.svg")
+def logo_svg():
+    p = HERE / "logo.svg"
+    if not p.exists(): raise HTTPException(404)
+    return FileResponse(p, media_type="image/svg+xml")
+
 @app.post("/api/analyze")
 async def analyze(file: UploadFile = File(...)):
     tmp = tempfile.NamedTemporaryFile(delete=False, suffix=Path(file.filename or "v.mp4").suffix or ".mp4")

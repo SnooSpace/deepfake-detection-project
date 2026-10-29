@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <title>3D Polygon Head Test</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="three.min.js"></script>
+  <script src="head_model.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background: radial-gradient(120% 90% at 78% 30%, #241a2c 0%, #120e17 58%);
+      background-color: #120e17;
+      color: #f4f0ea;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center">
+  <div style="width: 800px; height: 780px; position: relative;">
+    <div id="head-container" style="width: 100%; height: 100%; position: relative;"></div>
+  </div>
+
+  <script>
+    (function() {
+      const container = document.getElementById('head-container');
+      if (!container || !window.HEAD_3D_DATA || typeof THREE === 'undefined') return;
+
+      const data = window.HEAD_3D_DATA;
+
+      // 1. Decode base64 buffers
+      function b64ToUint16(b64) {
+        const bin = atob(b64);
+        const len = bin.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
+        return new Uint16Array(bytes.buffer);
+      }
+
+      function b64ToUint8(b64) {
+        const bin = atob(b64);
+        const len = bin.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
+        return bytes;
+      }
+
+      const normPos = b64ToUint16(data.posB64);
+      const rawIndices = b64ToUint16(data.idxB64);
+      const rawHeat = b64ToUint8(data.heatB64);
+
+      const numVerts = data.numVerts;
+      const positions = new Float32Array(numVerts * 3);
+      const heats = new Float32Array(numVerts);
+
+      const minP = data.min;
+      const maxP = data.max;
+      const span = [maxP[0] - minP[0], maxP[1] - minP[1], maxP[2] - minP[2]];
+
+      for (let i = 0; i < numVerts; i++) {
+        const o = i * 3;
+        positions[o]     = minP[0] + (normPos[o]     / 65535.0) * span[0];
+        positions[o + 1] = minP[1] + (normPos[o + 1] / 65535.0) * span[1];
+        positions[o + 2] = minP[2] + (normPos[o + 2] / 65535.0) * span[2];
+        heats[i] = rawHeat[i] / 255.0;
+      }
+
+      // Build Three.js Geometry
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geometry.setAttribute('heat', new THREE.BufferAttribute(heats, 1));
+      geometry.setIndex(new THREE.BufferAttribute(rawIndices, 1));
+      geometry.computeVertexNormals();
+
+      // Three.js Scene Setup
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(38, 800 / 780, 0.1, 100);
+      camera.position.set(0, 0.1, 9.8);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(800, 780);
+      renderer.setClearColor(0x000000, 0);
+      container.appendChild(renderer.domElement);
+
+      // Custom Shader for Thermal Heatmap Faces
+      const customFaceShader = {
+        uniforms: {
+          uScanY: { value: 0.0 },
+          uScanActive: { value: 1.0 },
+          uTime: { value: 0.0 }
+        },
+        vertexShader: `
+          attribute float heat;
+          varying float vHeat;
+          varying vec3 vNormal;
+          varying vec3 vWorldPos;
+          varying vec3 vViewPosition;
+
+          void main() {
+            vHeat = heat;
+            vNormal = normalize(normalMatrix * normal);
+            vec4 worldPos = modelMatrix * vec4(position, 1.0);
+            vWorldPos = worldPos.xyz;
+            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+            vViewPosition = -mvPosition.xyz;
+            gl_Position = projectionMatrix * mvPosition;
+          }
+        `,
+        fragmentShader: `
+          uniform float uScanY;
+          uniform float uScanActive;
+          uniform float uTime;
+
+          varying float vHeat;
+          varying vec3 vNormal;
+          varying vec3 vWorldPos;
+          varying vec3 vViewPosition;
+
+          vec4 getSpectralHeatColor(float h) {
+            // Authentic spectral / jet / turbo thermal colormap
+            if (h < 0.05) {
+              return vec4(0.06, 0.04, 0.09, 0.0);
+            }
+            vec3 c;
+            float alpha = 0.90;
+            if (h < 0.22) {
+              float t = (h - 0.05) / 0.17;
+              c = mix(vec3(0.05, 0.12, 0.65), vec3(0.0, 0.42, 0.96), t);
+              alpha = mix(0.40, 0.85, t);
+            } else if (h < 0.42) {
+              float t = (h - 0.22) / 0.20;
+              c = mix(vec3(0.0, 0.42, 0.96), vec3(0.0, 0.96, 0.82), t);
+              alpha = 0.88;
+            } else if (h < 0.62) {
+              float t = (h - 0.42) / 0.20;
+              c = mix(vec3(0.0, 0.96, 0.82), vec3(0.18, 0.96, 0.12), t);
+              alpha = 0.91;
+            } else if (h < 0.80) {
+              float t = (h - 0.62) / 0.18;
+              c = mix(vec3(0.18, 0.96, 0.12), vec3(1.0, 0.92, 0.0), t);
+              alpha = 0.93;
+            } else if (h < 0.93) {
+              float t = (h - 0.80) / 0.13;
+              c = mix(vec3(1.0, 0.92, 0.0), vec3(1.0, 0.14, 0.02), t);
+              alpha = 0.96;
+            } else {
+              float t = (h - 0.93) / 0.07;
+              c = mix(vec3(1.0, 0.14, 0.02), vec3(1.0, 0.98, 0.88), t);
+              alpha = 0.98;
+            }
+            return vec4(c, alpha);
+          }
+
+          void main() {
+            vec3 n = normalize(vNormal);
+            vec3 v = normalize(vViewPosition);
+
+            // Shading with subtle key light from upper-left
+            vec3 lightDir = normalize(vec3(-0.4, 0.7, 0.8));
+            float diff = max(0.0, dot(n, lightDir)) * 0.35 + 0.65;
+
+            // Specular / rim
+            float rim = 1.0 - max(0.0, dot(n, v));
+            rim = pow(rim, 3.0) * 0.25;
+
+            vec4 heatCol = getSpectralHeatColor(vHeat);
+            if (heatCol.a <= 0.01) {
+              discard; // Keep back of skull, ears, and neck transparent to showcase wireframe & dots!
+            }
+
+            // Scanline wave interaction
+            float distScan = abs(vWorldPos.y - uScanY);
+            float scanGlow = 0.0;
+            if (uScanActive > 0.0 && distScan < 0.25) {
+              scanGlow = (1.0 - distScan / 0.25) * 0.45 * uScanActive;
+            }
+
+            vec3 finalColor = heatCol.rgb * diff + rim + vec3(1.0, 0.85, 0.5) * scanGlow;
+            gl_FragColor = vec4(finalColor, heatCol.a);
+          }
+        `
+      };
+
+      const faceMaterial = new THREE.ShaderMaterial({
+        uniforms: customFaceShader.uniforms,
+        vertexShader: customFaceShader.vertexShader,
+        fragmentShader: customFaceShader.fragmentShader,
+        transparent: true,
+        side: THREE.FrontSide,
+        depthWrite: true
+      });
+
+      const faceMesh = new THREE.Mesh(geometry, faceMaterial);
+
+      // 2. Wireframe Lines (Crisp White Mesh Lines)
+      const wireframeGeom = new THREE.WireframeGeometry(geometry);
+      const wireframeShader = {
+        uniforms: {
+          uScanY: { value: 0.0 },
+          uScanActive: { value: 1.0 }
+        },
+        vertexShader: `
+          varying vec3 vWorldPos;
+          varying vec3 vNormal;
+          void main() {
+            vec4 wp = modelMatrix * vec4(position, 1.0);
+            vWorldPos = wp.xyz;
+            vNormal = normalize(normalMatrix * normal);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform float uScanY;
+          uniform float uScanActive;
+          varying vec3 vWorldPos;
+          varying vec3 vNormal;
+
+          void main() {
+            float dist = abs(vWorldPos.y - uScanY);
+            float scanBoost = 0.0;
+            if (uScanActive > 0.0 && dist < 0.22) {
+              scanBoost = (1.0 - dist / 0.22) * 0.7 * uScanActive;
+            }
+            vec3 col = mix(vec3(0.92, 0.94, 0.98), vec3(1.0, 0.88, 0.55), scanBoost);
+            float alpha = 0.52 + scanBoost * 0.45;
+            gl_FragColor = vec4(col, alpha);
+          }
+        `
+      };
+
+      const wireMaterial = new THREE.ShaderMaterial({
+        uniforms: wireframeShader.uniforms,
+        vertexShader: wireframeShader.vertexShader,
+        fragmentShader: wireframeShader.fragmentShader,
+        transparent: true,
+        depthTest: true
+      });
+
+      const wireframeLines = new THREE.LineSegments(wireframeGeom, wireMaterial);
+
+      // 3. Vertex Dots / Nodes (Point Cloud with circular dots)
+      // Generate circular dot texture
+      const dotCanvas = document.createElement('canvas');
+      dotCanvas.width = 64;
+      dotCanvas.height = 64;
+      const ctx = dotCanvas.getContext('2d');
+      const radGrad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      radGrad.addColorStop(0, 'rgba(255,255,255,1.0)');
+      radGrad.addColorStop(0.55, 'rgba(255,255,255,0.95)');
+      radGrad.addColorStop(0.85, 'rgba(235,245,255,0.4)');
+      radGrad.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = radGrad;
+      ctx.beginPath();
+      ctx.arc(32, 32, 30, 0, Math.PI * 2);
+      ctx.fill();
+
+      const dotTexture = new THREE.CanvasTexture(dotCanvas);
+
+      const pointsShader = {
+        uniforms: {
+          uTexture: { value: dotTexture },
+          uScanY: { value: 0.0 },
+          uScanActive: { value: 1.0 }
+        },
+        vertexShader: `
+          attribute float heat;
+          varying float vHeat;
+          varying vec3 vWorldPos;
+          uniform float uScanY;
+          uniform float uScanActive;
+
+          void main() {
+            vHeat = heat;
+            vec4 wp = modelMatrix * vec4(position, 1.0);
+            vWorldPos = wp.xyz;
+
+            float dist = abs(wp.y - uScanY);
+            float pSize = 3.6;
+            if (heat > 0.5) pSize = 4.2;
+            if (uScanActive > 0.0 && dist < 0.20) {
+              pSize += (1.0 - dist / 0.20) * 3.5;
+            }
+
+            gl_PointSize = pSize * (8.0 / - (modelViewMatrix * vec4(position, 1.0)).z);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform sampler2D uTexture;
+          uniform float uScanY;
+          uniform float uScanActive;
+          varying float vHeat;
+          varying vec3 vWorldPos;
+
+          void main() {
+            vec4 tex = texture2D(uTexture, gl_PointCoord);
+            if (tex.a < 0.08) discard;
+
+            float dist = abs(vWorldPos.y - uScanY);
+            float scanGlow = 0.0;
+            if (uScanActive > 0.0 && dist < 0.20) {
+              scanGlow = (1.0 - dist / 0.20) * uScanActive;
+            }
+
+            vec3 col = vec3(1.0, 1.0, 1.0);
+            if (scanGlow > 0.0) {
+              col = mix(col, vec3(1.0, 0.9, 0.6), scanGlow);
+            }
+            float alpha = tex.a * (0.80 + scanGlow * 0.20);
+            gl_FragColor = vec4(col, alpha);
+          }
+        `
+      };
+
+      const pointsMaterial = new THREE.ShaderMaterial({
+        uniforms: pointsShader.uniforms,
+        vertexShader: pointsShader.vertexShader,
+        fragmentShader: pointsShader.fragmentShader,
+        transparent: true,
+        depthWrite: false
+      });
+
+      const pointCloud = new THREE.Points(geometry, pointsMaterial);
+
+      // Create Head Group
+      const headGroup = new THREE.Group();
+      headGroup.add(faceMesh);
+      headGroup.add(wireframeLines);
+      headGroup.add(pointCloud);
+
+      // Set Exact Pose matching the reference image
+      // Turn left ~34 deg, tilt up ~10 deg, slight roll
+      headGroup.rotation.y = -0.58; // ~ -33.2 deg
+      headGroup.rotation.x = 0.16;  // ~ +9.2 deg
+      headGroup.rotation.z = -0.05; // ~ -2.8 deg
+      headGroup.position.set(0.15, -0.05, 0);
+
+      scene.add(headGroup);
+
+      // Render static frame
+      renderer.render(scene, camera);
+      console.log('Test render finished');
+    })();
+  </script>
+</body>
+</html>

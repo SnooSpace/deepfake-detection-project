@@ -41,16 +41,22 @@
 
   <style>
     :root {
-      --bg-hero: #1d102e;
-      --bg-page: #170c26;
-      --bg-card: #241338;
+      --bg: #120e17;
+      --bg2: #1a1520;
+      --line: #2e2636;
+      --ivory: #efe6d8;
+      --dim: #a89fae;
+      --gold: #d2a56a;
+      --rose: #e0707f;
+      --sage: #8fb8a4;
+      --bg-hero: #120e17;
+      --bg-page: #120e17;
+      --bg-card: #1a1520;
       --border-subtle: rgba(216, 180, 254, 0.11);
       /* Deepfake analysis lab theme tokens matched to the Uncanny palette */
-      --bg: #1d102e;
-      --panel: rgba(34, 18, 53, 0.88);
+      --panel: rgba(26, 21, 32, 0.88);
       --ink: #f4f0ea;
       --mute: #baa9c7;
-      --line: rgba(216, 180, 254, 0.16);
       --real: #10b981;
       --fake: #f43f5e;
       --heat: #cfa763;
@@ -62,16 +68,32 @@
       box-sizing: border-box;
     }
 
+    html {
+      height: 100%;
+    }
+
     body {
-      background-color: #1d102e;
-      background-image:
-        radial-gradient(ellipse 68% 62% at 68% 42%, #3d1e61 0%, #2a1444 45%, rgba(29, 16, 46, 0) 75%),
-        radial-gradient(ellipse 65% 55% at 22% 30%, #2f174b 0%, #1d102e 65%, #140a20 100%);
+      margin: 0;
+      min-height: 100%;
+      background: radial-gradient(120% 90% at 78% 30%, #241a2c 0%, var(--bg) 58%);
+      background-color: var(--bg);
       background-attachment: fixed;
       color: var(--ink);
       font-family: var(--sans);
       overflow-x: hidden;
-      min-height: 100vh;
+    }
+
+    /* Landing screen viewport fit: lock scroll completely on home screen */
+    body[data-view="home"],
+    body:not([data-view="analyze"]) {
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    body[data-view="analyze"] {
+      height: auto;
+      overflow-y: auto;
     }
 
     /* Smooth floating scan text transition (no boxes, no arrows) */
@@ -663,16 +685,68 @@
     }
   </style>
 </head>
-<body class="bg-[#1d102e] text-[#f4f0ea] antialiased selection:bg-[#cfa763] selection:text-[#120d17]">
+<body data-view="home" class="bg-[#120e17] text-[#f4f0ea] antialiased selection:bg-[#cfa763] selection:text-[#120d17]">
 
   <!-- =====================================================================
        MINIMALIST TOP HEADER BAR
-       Only "Uncanny" on the left and "Video and voice authenticity check" on the right
+       "Uncanny" with logo on the left and "Video and voice authenticity check" on the right
        ===================================================================== -->
-  <header class="w-full border-b border-purple-200/[0.09]">
-    <div class="max-w-[1360px] mx-auto px-6 sm:px-12 h-20 flex items-center justify-between">
-      <a href="#" id="brand-home-link" class="font-serif italic text-[27px] tracking-tight text-[#f4f0ea] focus:outline-none">
-        Uncanny
+  <header class="w-full border-b border-purple-200/[0.09] shrink-0 z-30">
+    <div class="max-w-[1360px] mx-auto px-6 sm:px-10 h-16 flex items-center justify-between">
+      <a href="#" id="brand-home-link" class="inline-flex items-center gap-3 font-serif italic text-[26px] tracking-tight text-[#f4f0ea] focus:outline-none group">
+        <svg class="w-8 h-8 rounded-lg shadow-[0_2px_12px_rgba(0,0,0,0.35)] transition-transform group-hover:scale-105 shrink-0" viewBox="0 0 100 100" width="32" height="32" aria-hidden="true">
+          <defs>
+            <linearGradient id="logo-bg-base" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#15803d" />
+              <stop offset="35%" stop-color="#10b981" />
+              <stop offset="70%" stop-color="#059669" />
+              <stop offset="100%" stop-color="#047857" />
+            </linearGradient>
+            <radialGradient id="logo-amber-glow" cx="84%" cy="18%" r="62%">
+              <stop offset="0%" stop-color="#d97706" stop-opacity="0.9" />
+              <stop offset="50%" stop-color="#b45309" stop-opacity="0.55" />
+              <stop offset="100%" stop-color="#b45309" stop-opacity="0" />
+            </radialGradient>
+            <radialGradient id="logo-blue-glow" cx="16%" cy="84%" r="60%">
+              <stop offset="0%" stop-color="#2563eb" stop-opacity="0.95" />
+              <stop offset="48%" stop-color="#1d4ed8" stop-opacity="0.6" />
+              <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0" />
+            </radialGradient>
+            <radialGradient id="logo-rim" cx="50%" cy="50%" r="52%">
+              <stop offset="75%" stop-color="#000000" stop-opacity="0" />
+              <stop offset="100%" stop-color="#000000" stop-opacity="0.35" />
+            </radialGradient>
+            <filter id="logo-poly-glow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="1.5" stdDeviation="2" flood-color="#000000" flood-opacity="0.4" />
+              <feDropShadow dx="0" dy="0" stdDeviation="3.5" flood-color="#ffffff" flood-opacity="0.3" />
+            </filter>
+          </defs>
+          <rect x="3" y="3" width="94" height="94" rx="23" fill="url(#logo-bg-base)" />
+          <rect x="3" y="3" width="94" height="94" rx="23" fill="url(#logo-amber-glow)" />
+          <rect x="3" y="3" width="94" height="94" rx="23" fill="url(#logo-blue-glow)" />
+          <rect x="3" y="3" width="94" height="94" rx="23" fill="url(#logo-rim)" />
+          <rect x="3.75" y="3.75" width="92.5" height="92.5" rx="22.25" fill="none" stroke="rgba(255, 255, 255, 0.22)" stroke-width="1.5" />
+          <g filter="url(#logo-poly-glow)">
+            <polygon points="50,50.5 50,25 73.8,42.3" fill="rgba(255, 255, 255, 0.08)" />
+            <polygon points="50,50.5 73.8,42.3 64.7,70.2" fill="rgba(255, 255, 255, 0.16)" />
+            <polygon points="50,50.5 64.7,70.2 35.3,70.2" fill="rgba(255, 255, 255, 0.04)" />
+            <polygon points="50,50.5 35.3,70.2 26.2,42.3" fill="rgba(255, 255, 255, 0.12)" />
+            <polygon points="50,50.5 26.2,42.3 50,25" fill="rgba(255, 255, 255, 0.20)" />
+            <polygon points="50,25 73.8,42.3 64.7,70.2 35.3,70.2 26.2,42.3" fill="none" stroke="#ffffff" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round" />
+            <line x1="50" y1="50.5" x2="50" y2="25" stroke="#ffffff" stroke-width="4.2" stroke-linecap="round" />
+            <line x1="50" y1="50.5" x2="73.8" y2="42.3" stroke="#ffffff" stroke-width="4.2" stroke-linecap="round" />
+            <line x1="50" y1="50.5" x2="64.7" y2="70.2" stroke="#ffffff" stroke-width="4.2" stroke-linecap="round" />
+            <line x1="50" y1="50.5" x2="35.3" y2="70.2" stroke="#ffffff" stroke-width="4.2" stroke-linecap="round" />
+            <line x1="50" y1="50.5" x2="26.2" y2="42.3" stroke="#ffffff" stroke-width="4.2" stroke-linecap="round" />
+            <circle cx="50" cy="25" r="3.2" fill="#ffffff" />
+            <circle cx="73.8" cy="42.3" r="3.2" fill="#ffffff" />
+            <circle cx="64.7" cy="70.2" r="3.2" fill="#ffffff" />
+            <circle cx="35.3" cy="70.2" r="3.2" fill="#ffffff" />
+            <circle cx="26.2" cy="42.3" r="3.2" fill="#ffffff" />
+            <circle cx="50" cy="50.5" r="3.6" fill="#ffffff" />
+          </g>
+        </svg>
+        <span>Uncanny</span>
       </a>
       <div class="flex items-center gap-5">
         <button id="back-to-hero-btn" type="button" class="hidden text-[13px] text-[#d8b26e] hover:text-[#f4f0ea] transition-colors font-medium">
@@ -686,29 +760,29 @@
   </header>
 
   <!-- =====================================================================
-       SCREEN 1: LANDING HERO SCREEN ONLY (Headline + Subtext + Polygon Face)
+       SCREEN 1: LANDING HERO SCREEN (Non-scrollable, Viewport-fitted)
        ===================================================================== -->
-  <section id="landing-screen" class="relative overflow-hidden min-h-[calc(100vh-5rem)] flex items-center">
-    <div class="max-w-[1360px] w-full mx-auto px-6 sm:px-12">
-      <div class="relative grid grid-cols-1 lg:grid-cols-12 min-h-[640px] lg:min-h-[720px] items-center">
+  <section id="landing-screen" class="relative overflow-hidden h-[calc(100dvh-4rem)] max-h-[calc(100dvh-4rem)] flex items-center">
+    <div class="max-w-[1360px] w-full h-full mx-auto px-6 sm:px-10 flex items-center">
+      <div class="relative grid grid-cols-1 lg:grid-cols-12 w-full h-full items-center">
         
         <!-- LEFT COLUMN: Headline, Floating Scan Text beside "voice?", Subtitle, Single Pill CTA -->
-        <div class="lg:col-span-6 z-20 flex flex-col justify-center pt-10 pb-6 lg:py-0 relative">
+        <div class="lg:col-span-6 z-20 flex flex-col justify-center py-4 lg:py-0 relative">
           
           <!-- Main Editorial Headline + Floating Scan Text anchored near "match the voice?" -->
           <div class="relative">
-            <h1 class="font-serif text-[58px] sm:text-[78px] lg:text-[94px] leading-[0.96] tracking-[-0.02em] text-[#f4f0ea] font-normal">
+            <h1 class="font-serif text-[44px] sm:text-[60px] lg:text-[clamp(42px,5.4vw,80px)] leading-[0.95] tracking-[-0.02em] text-[#f4f0ea] font-normal">
               Does the face<br />
               match the <em class="italic font-normal text-[#d8b26e]">voice?</em>
             </h1>
 
-            <!-- FLOATING AUTO-CHANGING SCAN TEXT (No Box, No Border, No Arrows, No Dots) -->
-            <div class="mt-4 lg:mt-0 lg:absolute lg:right-[-95px] xl:right-[-135px] lg:bottom-[-48px] z-30 pointer-events-none select-none lg:text-right">
+            <!-- FLOATING AUTO-CHANGING SCAN TEXT -->
+            <div class="mt-3 lg:mt-0 lg:absolute lg:right-[-75px] xl:right-[-115px] lg:bottom-[-36px] z-30 pointer-events-none select-none lg:text-right">
               <div id="floating-scan-text-wrap" class="scan-text-transition scan-text-visible">
-                <div id="scan-stage-title" class="font-serif italic text-[27px] sm:text-[31px] text-[#f4f0ea] leading-[1.1] tracking-tight">
+                <div id="capT" class="font-serif italic text-[23px] sm:text-[27px] text-[#f4f0ea] leading-[1.1] tracking-tight">
                   Reading the eyes
                 </div>
-                <div id="scan-stage-subtitle" class="text-[13px] sm:text-[13.5px] text-[#baa9c7] mt-1 font-normal">
+                <div id="capS" class="text-[12.5px] sm:text-[13px] text-[#baa9c7] mt-0.5 font-normal">
                   Blink rhythm and edge detail
                 </div>
               </div>
@@ -716,13 +790,13 @@
           </div>
 
           <!-- Lead Paragraph -->
-          <p class="mt-8 lg:mt-11 text-[15px] sm:text-[16.5px] text-[#baa9c7] leading-[1.65] max-w-[430px] font-normal">
+          <p class="mt-5 lg:mt-7 text-[14.5px] sm:text-[16px] text-[#baa9c7] leading-[1.6] max-w-[420px] font-normal">
             Upload a short clip. Uncanny checks the video and the audio on their own, then tells you whether either has been faked.
           </p>
 
           <!-- Single Warm Ochre-Gold Pill Button -> Opens Screen 2 (Analysis Lab) -->
-          <div class="mt-9">
-            <button type="button" id="open-lab-btn" class="inline-flex items-center gap-3 px-7 py-3.5 rounded-full bg-[#cfa763] hover:bg-[#dfc896] text-[#120d17] font-medium text-[15px] transition-all shadow-[0_8px_30px_rgba(207,167,99,0.2)] cursor-pointer">
+          <div class="mt-6 lg:mt-8">
+            <button type="button" id="open-lab-btn" class="inline-flex items-center gap-3 px-6 sm:px-7 py-3 sm:py-3.5 rounded-full bg-[#cfa763] hover:bg-[#dfc896] text-[#120d17] font-medium text-[15px] transition-all shadow-[0_8px_30px_rgba(207,167,99,0.2)] cursor-pointer">
               <span>Analyze a video</span>
               <span aria-hidden="true" class="text-lg leading-none">→</span>
             </button>
@@ -730,10 +804,10 @@
 
         </div>
 
-        <!-- RIGHT COLUMN: Guaranteed-Render 3D Polygon Thermal Face Stage -->
-        <div class="lg:col-span-6 relative h-[520px] sm:h-[620px] lg:h-[720px] w-full flex items-end justify-center select-none">
-          <div id="hero-face-canvas-container" class="relative w-full h-full flex items-end justify-center overflow-visible cursor-grab active:cursor-grabbing">
-            <canvas id="face-canvas" width="800" height="780" class="w-full h-full block"></canvas>
+        <!-- RIGHT COLUMN: 3D Polygon Head Stage -->
+        <div class="lg:col-span-6 relative h-[min(68vh,660px)] w-full flex items-center justify-center select-none">
+          <div id="hero-face-canvas-container" class="relative w-full h-full flex items-center justify-center overflow-visible">
+            <canvas id="head" width="800" height="780" class="w-full h-full block"></canvas>
           </div>
         </div>
 
@@ -809,889 +883,154 @@
        ===================================================================== -->
   <script>
     /*************************************************************************
-     * 1. GUARANTEED-RENDER 3D HUMAN POLYGON FACE ENGINE (HTML5 Canvas)
-     *    - Sculpted 3D anatomical human head, detailed 3D ear, cylindrical neck,
-     *      and flared shoulders/clavicles (~4,100 triangles) matching the
-     *      human silhouette of Screenshot 2 (Screenshot 2026-10-29 190908.jpg).
-     *    - Preserves the exact vibrant faceted thermal palette from image_bdb113.jpg:
-     *      cyan/mint & neon green upper cranium dome ringed by yellow, orange,
-     *      crimson, and violet across the forehead/brow; deep electric blue &
-     *      violet across the eyes, cheek, and jaw; warm orange/red/gold highlights
-     *      on the nose bridge/tip, lips, and chin; and dark aubergine facets with
-     *      crisp silver-white wireframe + vertex dots on the right cheek, 3D ear,
-     *      neck, and shoulders.
-     *    - Features a bold, high-contrast dark-edged horizontal scanner line
-     *      sweeping top-to-bottom across the face.
+     * 1. PROCEDURAL 3D HUMAN POLYGON HEAD ENGINE (Landing Face)
      *************************************************************************/
+    (() => {
+      const cv0 = document.getElementById("head") || document.getElementById("face-canvas");
+      if (!cv0) return;
+      const g = cv0.getContext("2d");
+      const capT = document.getElementById("capT") || document.getElementById("scan-stage-title");
+      const capS = document.getElementById("capS") || document.getElementById("scan-stage-subtitle");
+      const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      let W = 0, H = 0, DPR = 1;
 
-    const SCAN_STAGES = [
-      {
-        title: 'Reading the eyes',
-        subtitle: 'Blink rhythm and edge detail',
-        targetRot: { x: -0.10, y: -0.52, z: -0.02 }
-      },
-      {
-        title: 'Reading the skin',
-        subtitle: 'Texture, shadow and lighting',
-        targetRot: { x: -0.07, y: -0.57, z: -0.03 }
-      },
-      {
-        title: 'Reading the lips',
-        subtitle: 'Mouth shape against the sound',
-        targetRot: { x: -0.05, y: -0.47, z: -0.02 }
-      },
-      {
-        title: 'Reading the jawline',
-        subtitle: 'Where the face meets the neck',
-        targetRot: { x: -0.13, y: -0.54, z: -0.03 }
+      function fit() {
+        DPR = Math.min(devicePixelRatio || 1, 2);
+        const r = cv0.getBoundingClientRect();
+        W = r.width;
+        H = r.height;
+        cv0.width = Math.round(W * DPR);
+        cv0.height = Math.round(H * DPR);
       }
-    ];
+      addEventListener("resize", () => { W = 0; });
 
-    let activeStageIdx = 0;
-    let basePose = { x: -0.10, y: -0.52, z: -0.02 };
-    let currentPose = { x: -0.10, y: -0.52, z: -0.02 };
-    let userDragOffset = { x: 0, y: 0 };
-    let mouseParallax = { x: 0, y: 0 };
-    let isDraggingHead = false;
-    let dragStart = { x: 0, y: 0 };
-    let buildStartTime = null;
-
-    let headVertices = [];
-    let headTriangles = [];
-
-    // Smooth Gaussian helper
-    function gauss(dx, sx, dy = 0, sy = 1, dz = 0, sz = 1) {
-      const ex = (dx / sx) * (dx / sx) + (dy / sy) * (dy / sy) + (dz / sz) * (dz / sz);
-      return ex > 18 ? 0 : Math.exp(-ex);
-    }
-
-    function smoothstep(edge0, edge1, x) {
-      const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
-      return t * t * (3 - 2 * t);
-    }
-
-    function mix(a, b, t) {
-      return a + (b - a) * t;
-    }
-
-    /**
-     * Evaluates the exact vibrant faceted thermal palette from image_bdb113.jpg:
-     * Deep Aubergine (#1b0e2e) -> Electric Cobalt Blue (#2924ff) ->
-     * Royal Violet (#6d24ff) -> Vivid Magenta-Crimson (#e81764) ->
-     * Fiery Red-Orange (#ff5510) -> Warm Gold-Yellow (#ffdc00) ->
-     * Electric Emerald Green (#00f578) -> Bright Turquoise Cyan (#00f0e6)
-     */
-    function sampleFaceSpectrumRGB(t) {
-      t = Math.max(0, Math.min(1, t));
-      const stops = [
-        { p: 0.00, r: 28,  g: 15,  b: 46  }, // #1c0f2e dark purplish-aubergine
-        { p: 0.14, r: 42,  g: 38,  b: 255 }, // #2a26ff deep electric cobalt blue
-        { p: 0.28, r: 92,  g: 38,  b: 255 }, // #5c26ff vivid violet-blue
-        { p: 0.39, r: 218, g: 24,  b: 118 }, // #da1876 magenta-crimson transition
-        { p: 0.49, r: 255, g: 52,  b: 38  }, // #ff3426 fiery scarlet-orange
-        { p: 0.60, r: 255, g: 145, b: 0   }, // #ff9100 vibrant orange-amber
-        { p: 0.71, r: 255, g: 230, b: 0   }, // #ffe600 bright golden yellow
-        { p: 0.83, r: 0,   g: 245, b: 128 }, // #00f580 neon emerald green
-        { p: 0.94, r: 0,   g: 238, b: 232 }, // #00eee8 luminous turquoise cyan
-        { p: 1.00, r: 45,  g: 255, b: 225 }  // #2dffe1 bright mint-cyan crown
+      const LAT = 30, LON = 48, P = new Float32Array((LAT + 1) * LON * 3), R = new Float32Array(P.length);
+      let sd = 11;
+      const rnd = () => (sd = sd * 16807 % 2147483647) / 2147483647 - .5;
+      const BU = [
+        [-.3, .3, .9, .08, .3], [.3, .3, .9, .08, .3], [0, .3, .95, .05, .2],
+        [-.32, .2, .93, -.06, .2], [.32, .2, .93, -.06, .2], [0, .12, 1, .14, .16],
+        [0, -.1, 1, .18, .13], [-.14, -.1, .97, .05, .1], [.14, -.1, .97, .05, .1],
+        [-.55, 0, .8, .07, .3], [.55, 0, .8, .07, .3], [0, -.32, .96, .06, .14],
+        [0, -.45, .93, -.03, .1], [0, -.68, .82, .12, .22], [-.75, -.5, .4, .05, .3],
+        [.75, -.5, .4, .05, .3], [-1, -.05, -.1, .08, .25], [1, -.05, -.1, .08, .25]
       ];
 
-      for (let i = 0; i < stops.length - 1; i++) {
-        const s0 = stops[i];
-        const s1 = stops[i + 1];
-        if (t >= s0.p && t <= s1.p) {
-          const u = (t - s0.p) / (s1.p - s0.p);
-          return [
-            s0.r + (s1.r - s0.r) * u,
-            s0.g + (s1.g - s0.g) * u,
-            s0.b + (s1.b - s0.b) * u
-          ];
+      for (let i = 0; i <= LAT; i++) {
+        for (let j = 0; j < LON; j++) {
+          const th = Math.PI * (.06 + .74 * (i + (i > 0 && i < LAT ? rnd() * .7 : 0)) / LAT);
+          const ph = Math.PI * 2 * ((j + rnd() * .7) / LON) - Math.PI;
+          const d0 = Math.sin(th) * Math.sin(ph), d1 = Math.cos(th), d2 = Math.sin(th) * Math.cos(ph);
+          let k = 1;
+          for (const b of BU) {
+            const e = (d0 - b[0]) ** 2 + (d1 - b[1]) ** 2 + (d2 - b[2]) ** 2;
+            k += b[3] * Math.exp(-e / (b[4] * b[4]));
+          }
+          const tp = 1 - .22 * Math.min(1, Math.max(0, -d1 * 1.3));
+          const o = (i * LON + j) * 3;
+          P[o] = d0 * .8 * tp * k;
+          P[o + 1] = d1 * 1.05 * k;
+          P[o + 2] = d2 * .95 * k;
         }
       }
-      return [0, 238, 232];
-    }
 
-    /**
-     * Sculpted 3D Anatomical Human Bust Generator (Matches Screenshot 2 shape):
-     * - Full Cranium, Forehead, Supraorbital Brow, Recessed Orbits + Eyelids,
-     *   Unmistakable Projecting 3D Human Nose (Bridge, Tip, Nostrils, Columella),
-     *   Zygomatic Cheekbones, Nasolabial Crease, Philtrum, Sculpted Upper & Lower Lips,
-     *   Mentolabial Sulcus, Projecting Chin, Mandible Jawline,
-     *   Detailed 3D Human Ear on the side of the head,
-     *   Anatomical Neck with Sternocleidomastoid contours, and Flared Shoulders.
-     */
-    function buildAnatomicalPolygonHead() {
-      headVertices = [];
-      headTriangles = [];
-
-      const rings = 64; // High vertical resolution from crown (+0.86) to shoulders (-1.08)
-      const segs = 48;  // Angular segments around head & bust
-      const ringGrid = [];
-
-      for (let r = 0; r <= rings; r++) {
-        const v = r / rings; // 0 = crown of head, 1 = bottom of shoulders
-        // Map v to vertical coordinate y from +0.86 (top of head) down to -1.06 (shoulders)
-        // Concentrating rings around the eyes, nose, lips, and chin (y between +0.30 and -0.45)
-        let y;
-        if (v <= 0.16) {
-          // Crown dome (+0.86 to +0.52)
-          const t = v / 0.16;
-          y = 0.86 - Math.pow(t, 1.35) * 0.34;
-        } else if (v <= 0.72) {
-          // Forehead, eyes, nose, lips, chin (+0.52 to -0.44)
-          const t = (v - 0.16) / 0.56;
-          y = 0.52 - t * 0.96;
-        } else {
-          // Neck and flared shoulders (-0.44 to -1.06)
-          const t = (v - 0.72) / 0.28;
-          y = -0.44 - Math.pow(t, 1.08) * 0.62;
+      const T = [], ix = (i, j) => i * LON + (j % LON);
+      for (let i = 0; i < LAT; i++) {
+        for (let j = 0; j < LON; j++) {
+          const a = ix(i, j), b = ix(i, j + 1), c = ix(i + 1, j), d = ix(i + 1, j + 1);
+          ((i + j) & 1) ? T.push(a, b, c, b, d, c) : T.push(a, b, d, a, d, c);
         }
-
-        const rowIndices = [];
-        for (let s = 0; s < segs; s++) {
-          const uNorm = s / segs;
-          // Stagger alternate rows by 0.5 segment for clean Delaunay-like triangles
-          const stagger = (r % 2 === 1) ? 0.5 / segs : 0;
-          const hash1 = Math.sin(r * 23.17 + s * 51.83) * 43758.5453;
-          const jitterU = ((hash1 - Math.floor(hash1)) - 0.5) * (0.22 / segs);
-          const hash2 = Math.cos(r * 37.11 + s * 17.49) * 29381.1357;
-          const jitterY = (r > 1 && r < rings - 1) ? ((hash2 - Math.floor(hash2)) - 0.5) * 0.008 : 0;
-
-          // Theta = 0 at front center of face (+Z), +PI/2 on right side (+X), -PI/2 on left side (-X)
-          const theta = (uNorm + stagger + jitterU) * Math.PI * 2 - Math.PI;
-          const py = y + jitterY;
-          const nx = Math.sin(theta);
-          const nz = Math.cos(theta);
-
-          // -----------------------------------------------------------------
-          // 1. BASE CRANIUM, JAW, NECK & SHOULDER SILHOUETTE ENVELOPE
-          // -----------------------------------------------------------------
-          let radX = 0.44;
-          let radZ = 0.52;
-          let zOffset = 0.0;
-
-          if (py >= 0.12) {
-            // Upper cranium & forehead dome (+0.12 to +0.86)
-            const domeT = Math.max(0, Math.min(1, (0.865 - py) / 0.745));
-            const domeProfile = Math.sin(Math.pow(domeT, 0.74) * (Math.PI * 0.5));
-            radX = 0.465 * domeProfile;
-            radZ = 0.545 * domeProfile;
-            // Back of skull (occipital bun) extends slightly back
-            if (nz < 0) {
-              radZ += 0.065 * (-nz) * gauss(py - 0.28, 0.26);
-            }
-            zOffset = 0.02 * gauss(py - 0.32, 0.28);
-          } else if (py >= -0.44) {
-            // Mid-face (cheekbones) tapering down to mandible & chin (+0.12 to -0.44)
-            const faceT = (0.12 - py) / 0.56; // 0 at eyes/temples, 1 at chin base
-            // Cheekbone width tapers toward lower jaw
-            radX = mix(0.465, 0.255, Math.pow(faceT, 1.15));
-            radZ = mix(0.545, 0.345, Math.pow(faceT, 1.05));
-
-            // Distinct mandibular angle (gonial angle of jaw below the ear)
-            const jawCorner = gauss(py + 0.24, 0.11) * gauss(Math.abs(nx) - 0.82, 0.25) * smoothstep(-0.2, 0.4, nz);
-            radX += jawCorner * 0.055;
-
-            // Projecting lower face / maxilla / mandible forward (+Z)
-            if (nz > -0.2) {
-              zOffset += smoothstep(-0.2, 0.5, nz) * mix(0.03, 0.11, Math.sin(faceT * Math.PI * 0.85));
-            }
-            // Sub-occipital curve where back of skull meets upper neck
-            if (nz < 0) {
-              radZ -= (-nz) * smoothstep(0.08, -0.35, py) * 0.11;
-            }
-          } else {
-            // Cylindrical Neck (-0.44 to -0.78) flaring into Shoulders/Clavicles (-0.78 to -1.06)
-            const neckT = Math.min(1, (-0.44 - py) / 0.62); // 0 at top of neck, 1 at bottom of bust
-            const shoulderFlare = Math.pow(smoothstep(0.32, 1.0, neckT), 1.65);
-
-            radX = mix(0.265, 0.92, shoulderFlare);
-            radZ = mix(0.285, 0.44, shoulderFlare);
-            // Neck tilts slightly forward; throat is tucked behind chin
-            zOffset = -0.045 + smoothstep(0.0, 0.5, neckT) * -0.02;
-
-            // Sternocleidomastoid V-muscles on neck + clavicle ridge on shoulders
-            const scmAngle = Math.abs(nx) - mix(0.22, 0.65, 1.0 - neckT * 0.7);
-            const scmRidge = gauss(scmAngle, 0.18) * smoothstep(-0.1, 0.6, nz) * (1.0 - shoulderFlare * 0.6);
-            radZ += scmRidge * 0.028;
-
-            // Clavicle (collarbone) horizontal ridge at top of chest
-            const clavicle = gauss(py + 0.86, 0.065) * gauss(Math.abs(nx) - 0.52, 0.35) * smoothstep(0.1, 0.8, nz);
-            radZ += clavicle * 0.045;
-
-            // Slope shoulders downward slightly at the outer deltoid edges
-          }
-
-          let x = nx * radX;
-          let z = nz * radZ + zOffset;
-          let finalY = py;
-
-          // Slope outer shoulders downward gently for natural human trapezius/deltoid silhouette
-          if (py < -0.68) {
-            const outerWidth = Math.max(0, Math.abs(x) - 0.28);
-            finalY -= outerWidth * 0.26;
-          }
-
-          // -----------------------------------------------------------------
-          // 2. DETAILED FRONT FACIAL ANATOMY (Forehead, Eyes, Nose, Lips, Chin)
-          // -----------------------------------------------------------------
-          if (nz > -0.15 && py > -0.52 && py < 0.68) {
-            const frontMask = smoothstep(-0.15, 0.28, nz);
-
-            // A. Forehead Frontal Bossing & Temple Hollows
-            const foreheadPlane = gauss(x, 0.32, py - 0.38, 0.16);
-            z += foreheadPlane * 0.048 * frontMask;
-            const templeHollow = gauss(Math.abs(x) - 0.34, 0.09, py - 0.20, 0.11);
-            x -= Math.sign(x) * templeHollow * 0.022 * frontMask;
-
-            // B. Supraorbital Brow Ridge & Glabella Furrow
-            const browArch = gauss(x, 0.30, py - 0.19, 0.048) * (1.0 - 0.25 * gauss(x, 0.048));
-            z += browArch * 0.065 * frontMask;
-
-            // C. Recessed Orbital Eye Sockets + Sculpted Closed/Narrowed Eyelids
-            const leftEyeDx = x + 0.165;
-            const rightEyeDx = x - 0.165;
-            const eyeDy = py - 0.095;
-
-            const leftSocket = gauss(leftEyeDx, 0.105, eyeDy, 0.068);
-            const rightSocket = gauss(rightEyeDx, 0.105, eyeDy, 0.068);
-            z -= (leftSocket + rightSocket) * 0.068 * frontMask;
-
-            // Rounded Eyeball + Upper & Lower Eyelid Folds (like Screenshot 2)
-            const leftEyeball = gauss(leftEyeDx, 0.065, eyeDy, 0.038);
-            const rightEyeball = gauss(rightEyeDx, 0.065, eyeDy, 0.038);
-            const upperLid = gauss(eyeDy - 0.012, 0.016);
-            const lidSlit = gauss(eyeDy + 0.004, 0.007);
-            const lowerLid = gauss(eyeDy + 0.020, 0.014);
-            const lidContour = 0.052 + upperLid * 0.024 - lidSlit * 0.022 + lowerLid * 0.015;
-            z += (leftEyeball + rightEyeball) * lidContour * frontMask;
-
-            // D. Prominent 3D Human Nose (Bridge, Dorsum, Projecting Tip, Alar Wings, Nostrils)
-            // Nose spans from y = +0.14 (nasion between eyes) down to y = -0.095 (subnasale)
-            const nasionDip = gauss(x, 0.06, py - 0.125, 0.032);
-            z -= nasionDip * 0.025 * frontMask;
-
-            // Nasal bridge ridge (dorsum) sloping strongly outward as y goes from +0.11 to -0.05
-            const bridgeSpan = smoothstep(0.14, 0.06, py) * smoothstep(-0.10, -0.03, py);
-            const bridgeSlope = smoothstep(0.13, -0.055, py);
-            const bridgeProfile = gauss(x, mix(0.058, 0.048, bridgeSlope)) * bridgeSpan;
-            z += bridgeProfile * mix(0.055, 0.165, Math.pow(bridgeSlope, 0.85)) * frontMask;
-
-            // Sculpted Nasal Tip (pronasale) at y = -0.055
-            const noseTip = gauss(x, 0.052, py + 0.055, 0.042);
-            z += noseTip * 0.115 * frontMask;
-            finalY -= noseTip * 0.012 * frontMask;
-
-            // Nostril Wings (Alae) & Recessed Nostril Cavities at y = -0.075
-            const leftAla = gauss(x + 0.068, 0.038, py + 0.072, 0.032);
-            const rightAla = gauss(x - 0.068, 0.038, py + 0.072, 0.032);
-            z += (leftAla + rightAla) * 0.068 * frontMask;
-            x -= leftAla * 0.016;
-            x += rightAla * 0.016;
-
-            const leftNostril = gauss(x + 0.042, 0.022, py + 0.088, 0.018);
-            const rightNostril = gauss(x - 0.042, 0.022, py + 0.088, 0.018);
-            z -= (leftNostril + rightNostril) * 0.038 * frontMask;
-            finalY += (leftNostril + rightNostril) * 0.012 * frontMask;
-
-            // E. Zygomatic Cheekbones, Infraorbital Malar Eminence & Nasolabial Crease
-            const leftZygoma = gauss(x + 0.23, 0.115, py + 0.01, 0.095);
-            const rightZygoma = gauss(x - 0.23, 0.115, py + 0.01, 0.095);
-            z += (leftZygoma + rightZygoma) * 0.055 * frontMask;
-            x -= leftZygoma * 0.026;
-            x += rightZygoma * 0.026;
-
-            // Buccal hollow (subtle cheek contour below cheekbone)
-            const buccalHollow = gauss(Math.abs(x) - 0.22, 0.085, py + 0.19, 0.085);
-            x -= Math.sign(x) * buccalHollow * 0.020 * frontMask;
-            z -= buccalHollow * 0.015 * frontMask;
-
-            // Nasolabial fold line running diagonally from nostril wing outside mouth corner
-            const nlTargetX = 0.075 + Math.max(0, (-0.05 - py)) * 0.42;
-            const nlFold = gauss(Math.abs(x) - nlTargetX, 0.024, py + 0.145, 0.075);
-            z -= nlFold * 0.024 * frontMask;
-
-            // F. Philtrum, Sculpted Upper Lip, Mouth Slit & Full Lower Lip
-            const philtrumDimple = gauss(x, 0.028, py + 0.132, 0.032);
-            z -= philtrumDimple * 0.018 * frontMask;
-
-            // Upper lip vermilion & Cupid's bow at y = -0.178
-            const upperLip = gauss(x, 0.115, py + 0.178, 0.026) * (1.0 - 0.18 * gauss(x, 0.022));
-            // Mouth parting crease at y = -0.205
-            const mouthCrease = gauss(x, 0.125, py + 0.205, 0.011);
-            // Oral commissures (tucked corners of the mouth)
-            const mouthCorners = gauss(Math.abs(x) - 0.115, 0.028, py + 0.205, 0.022);
-            // Full lower lip cushion at y = -0.234
-            const lowerLip = gauss(x, 0.105, py + 0.234, 0.028);
-            // Labiomental crease (indent between lower lip and chin) at y = -0.285
-            const chinCrease = gauss(x, 0.115, py + 0.288, 0.028);
-
-            z += (
-              upperLip * 0.078 +
-              lowerLip * 0.076 -
-              mouthCrease * 0.048 -
-              mouthCorners * 0.032 -
-              chinCrease * 0.038
-            ) * frontMask;
-
-            // G. Projecting Anatomical Chin Pad (Mentum) at y = -0.375
-            const chinPad = gauss(x, 0.118, py + 0.375, 0.058);
-            z += chinPad * 0.088 * frontMask;
-            finalY -= chinPad * 0.022 * frontMask;
-          }
-
-          // Submental tuck directly under the chin (creates sharp human jaw/neck separation!)
-          if (py < -0.38 && py > -0.60 && nz > 0.0) {
-            const submentalTuck = gauss(x, 0.19, py + 0.46, 0.065) * smoothstep(0.0, 0.5, nz);
-            z -= submentalTuck * 0.085;
-            finalY += submentalTuck * 0.025;
-          }
-
-          // -----------------------------------------------------------------
-          // 3. SCULPTED 3D HUMAN EARS (Helix rim, Concha bowl, Tragus, Lobe)
-          //    Prominently visible on the right side of the head in 3/4 view,
-          //    matching Screenshot 2 (Screenshot 2026-10-29 190908.jpg)!
-          // -----------------------------------------------------------------
-          const earCenterY = -0.025;
-          const earCenterZ = -0.055;
-          const earDy = (py - earCenterY) / 0.155;
-          const earDz = (z - earCenterZ) / 0.095;
-          const earRadial2 = earDy * earDy + earDz * earDz;
-
-          if (earRadial2 < 2.2 && Math.abs(nx) > 0.72) {
-            const earEnv = Math.exp(-earRadial2 * 1.35) * smoothstep(0.72, 0.92, Math.abs(nx));
-            const earRadius = Math.sqrt(earRadial2);
-            // Outer C-shaped helix rim + earlobe at bottom
-            const helixRim = Math.exp(-Math.pow((earRadius - 0.76) / 0.24, 2));
-            // Recessed inner concha bowl
-            const conchaBowl = Math.exp(-Math.pow(earRadius / 0.42, 2));
-            // Earlobe fullness at bottom of ear
-            const earLobe = gauss(earDy + 0.72, 0.32, earDz - 0.12, 0.35);
-
-            const earOutward = (helixRim * 0.082 + earLobe * 0.052 - conchaBowl * 0.028 + 0.032) * earEnv;
-            x += Math.sign(x) * earOutward;
-            // Pin back the posterior edge of the helix slightly (-Z) for realistic ear flare
-            if (earDz < 0) {
-              z -= Math.abs(earDz) * helixRim * earEnv * 0.035;
-            }
-          }
-
-          const idx = headVertices.length;
-          headVertices.push({
-            x, y: finalY, z,
-            nx: 0, ny: 0, nz: 1,
-            px: 0, py: 0, pz: 0
-          });
-          rowIndices.push(idx);
-        }
-        ringGrid.push(rowIndices);
       }
 
-      // Connect rings into Delaunay-style triangles
-      for (let r = 0; r < rings; r++) {
-        const rowA = ringGrid[r];
-        const rowB = ringGrid[r + 1];
-        for (let s = 0; s < segs; s++) {
-          const sNext = (s + 1) % segs;
-          const a0 = rowA[s];
-          const a1 = rowA[sNext];
-          const b0 = rowB[s];
-          const b1 = rowB[sNext];
+      const zones = [
+        [0, .28, "Reading the eyes", "Blink rhythm and edge detail"],
+        [.28, .55, "Reading the skin", "Texture, shadow and lighting"],
+        [.55, .8, "Reading the lips", "Mouth shape against the sound"],
+        [.8, 1.01, "Reading the jawline", "Where the face meets the neck"]
+      ];
+      const ease = p => p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+      const t0 = performance.now();
 
-          if (r % 2 === 0) {
-            headTriangles.push(createTriangleRecord(a0, b0, a1));
-            headTriangles.push(createTriangleRecord(a1, b0, b1));
-          } else {
-            headTriangles.push(createTriangleRecord(a0, b0, b1));
-            headTriangles.push(createTriangleRecord(a0, b1, a1));
+      function frame(now) {
+        requestAnimationFrame(frame);
+        if (document.body.dataset.view && document.body.dataset.view !== "home") { W = 0; return; }
+        if (!W) { fit(); if (!W) return; }
+        const t = (now - t0) / 1000;
+        const yaw = -.55 + (RM ? 0 : .2 * Math.sin(t * .4));
+        const pit = -.2 + (RM ? 0 : .04 * Math.sin(t * .55));
+        const cyw = Math.cos(yaw), syw = Math.sin(yaw), cp = Math.cos(pit), sp = Math.sin(pit);
+        const S = H * .36, ox = W * .52, oy = H * .5;
+
+        for (let k = 0; k < P.length; k += 3) {
+          const x = P[k], y = P[k + 1], z = P[k + 2];
+          const x1 = x * cyw + z * syw, z1 = -x * syw + z * cyw;
+          R[k] = x1;
+          R[k + 1] = y * cp - z1 * sp;
+          R[k + 2] = y * sp + z1 * cp;
+        }
+
+        const top = oy - S * 1.05, bot = oy + S * .85;
+        const rev = RM ? 1 : Math.min(1, t / 3.4);
+        const ryy = rev < 1 ? top + (bot - top) * rev : 1e9;
+        const scanY = rev < 1 ? ryy : top + (bot - top) * ease(((t - 3.4) % 5.5) / 5.5);
+
+        if (rev >= 1) {
+          const p = (scanY - top) / (bot - top);
+          const z = zones.find(z => p >= z[0] && p < z[1]);
+          if (z && capT && capT.textContent !== z[2]) {
+            capT.textContent = z[2];
+            if (capS) capS.textContent = z[3];
           }
         }
-      }
 
-      // Compute smooth vertex normals + per-triangle anatomical thermal values
-      computeHeadNormalsAndThermalMap();
-    }
+        g.setTransform(DPR, 0, 0, DPR, 0, 0);
+        g.clearRect(0, 0, W, H);
+        g.lineJoin = "round";
+        g.lineWidth = .7;
 
-    function createTriangleRecord(i0, i1, i2) {
-      const v0 = headVertices[i0];
-      const v1 = headVertices[i1];
-      const v2 = headVertices[i2];
-      const cx = (v0.x + v1.x + v2.x) / 3;
-      const cy = (v0.y + v1.y + v2.y) / 3;
-      const cz = (v0.z + v1.z + v2.z) / 3;
-      const hash = Math.abs(Math.sin(cx * 17.23 + cy * 83.41 + cz * 41.97) * 43758.5453) % 1.0;
+        const vis = [];
+        for (let i = 0; i < T.length; i += 3) {
+          const a = T[i] * 3, b = T[i + 1] * 3, c = T[i + 2] * 3;
+          const ux = R[b] - R[a], uy = R[b + 1] - R[a + 1], uz = R[b + 2] - R[a + 2];
+          const vx = R[c] - R[a], vy = R[c + 1] - R[a + 1], vz = R[c + 2] - R[a + 2];
+          let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+          const mx = (R[a] + R[b] + R[c]) / 3, my = (R[a + 1] + R[b + 1] + R[c + 1]) / 3, mz = (R[a + 2] + R[b + 2] + R[c + 2]) / 3;
+          if (nx * mx + ny * my + nz * mz < 0) { nx = -nx; ny = -ny; nz = -nz; }
+          if (nz <= 0) continue;
+          vis.push([mz, i, nx, ny, nz, my]);
+        }
+        vis.sort((p, q) => p[0] - q[0]);
 
-      return {
-        i0, i1, i2,
-        cx, cy, cz,
-        fnx: 0, fny: 0, fnz: 1,
-        hash,
-        thermalBase: 0,
-        activeMask: 0,
-        depth: 0
-      };
-    }
+        for (const v of vis) {
+          const i = v[1], a = T[i] * 3, b = T[i + 1] * 3, c = T[i + 2] * 3;
+          const sy = oy - v[5] * S;
+          if (sy > ryy) continue;
+          const l = Math.hypot(v[2], v[3], v[4]), nx = v[2] / l, ny = v[3] / l, nz = v[4] / l;
+          const u = Math.min(1, Math.max(0, nx * .4 + ny * .7 + nz * .6)), fr = 1 - nz;
+          const d = Math.abs(sy - scanY) / (H * .05), bo = d < 1 ? 1 - d : 0;
+          const fade = Math.min(1, Math.max(0, 1 - (-v[5] - .5) / .35));
+          const hue = (265 + (u * .85 + fr * .35) * 260) % 360;
 
-    /**
-     * Computes facet normals, vertex normals, and preserves the exact vibrant
-     * faceted thermal color layout from image_bdb113.jpg mapped onto the new
-     * anatomical human head, ear, neck, and shoulders mesh.
-     */
-    function computeHeadNormalsAndThermalMap() {
-      for (let i = 0; i < headVertices.length; i++) {
-        headVertices[i].nx = 0;
-        headVertices[i].ny = 0;
-        headVertices[i].nz = 0;
-      }
-
-      for (let t = 0; t < headTriangles.length; t++) {
-        const tri = headTriangles[t];
-        const v0 = headVertices[tri.i0];
-        const v1 = headVertices[tri.i1];
-        const v2 = headVertices[tri.i2];
-
-        const ux = v1.x - v0.x, uy = v1.y - v0.y, uz = v1.z - v0.z;
-        const vx = v2.x - v0.x, vy = v2.y - v0.y, vz = v2.z - v0.z;
-        let nx = uy * vz - uz * vy;
-        let ny = uz * vx - ux * vz;
-        let nz = ux * vy - uy * vx;
-        const len = Math.hypot(nx, ny, nz) || 1;
-        nx /= len; ny /= len; nz /= len;
-
-        // Ensure outward normal
-        if (nx * tri.cx + ny * (tri.cy * 0.35) + nz * tri.cz < 0) {
-          nx = -nx; ny = -ny; nz = -nz;
+          g.fillStyle = `hsla(${hue | 0}, ${55 + 20 * u | 0}%, ${10 + 42 * Math.pow(u, 1.6) + 8 * fr + 28 * bo}%, ${.92 * fade})`;
+          g.strokeStyle = bo > 0 ? `rgba(210,165,106,${(.35 + .6 * bo) * fade})` : `rgba(239,230,216,${(.14 + .1 * u) * fade})`;
+          g.beginPath();
+          g.moveTo(ox + R[a] * S, oy - R[a + 1] * S);
+          g.lineTo(ox + R[b] * S, oy - R[b + 1] * S);
+          g.lineTo(ox + R[c] * S, oy - R[c + 1] * S);
+          g.closePath();
+          g.fill();
+          g.stroke();
         }
 
-        tri.fnx = nx;
-        tri.fny = ny;
-        tri.fnz = nz;
-
-        v0.nx += nx; v0.ny += ny; v0.nz += nz;
-        v1.nx += nx; v1.ny += ny; v1.nz += nz;
-        v2.nx += nx; v2.ny += ny; v2.nz += nz;
-
-        const px = tri.cx;
-        const py = tri.cy;
-        const pz = tri.cz;
-
-        // 1. Keep the exact color regions from image_bdb113.jpg & Screenshot 2:
-        //    - Upper cranium dome (py > 0.24): bright cyan/mint (#00eee8) & neon green (#00f580)
-        //      ringed by yellow (#ffe600), orange (#ff9100), crimson (#da1876), and violet (#5c26ff)
-        //    - Front/left facial features: deep cobalt blue (#2a26ff) & violet base with
-        //      warm red/orange/gold highlights on the nose bridge/tip, lips, and chin,
-        //      plus a subtle cobalt-blue vertical thermal streak down the front-left neck
-        //    - Right cheek, 3D ear, back of cranium, and shoulders stay dark aubergine
-        //      with crisp silver-white wireframe triangles and vertex dots.
-        const frontMask = smoothstep(-0.06, 0.28, pz);
-        const leftFaceMask = smoothstep(0.14, -0.08, px) * smoothstep(-0.48, -0.32, py);
-        const crownMask = smoothstep(0.16, 0.38, py) * smoothstep(0.38, -0.10, px) * smoothstep(-0.18, 0.22, pz);
-        const neckLeftStreak = gauss(px + 0.08, 0.13, py + 0.65, 0.28, pz - 0.20, 0.18);
-
-        const activeFaceMask = Math.max(frontMask * leftFaceMask, crownMask, neckLeftStreak * 0.75);
-        tri.activeMask = activeFaceMask;
-
-        // A. Upper Cranium & Forehead Concentric Rainbow Dome (Cyan -> Green -> Yellow -> Orange -> Magenta -> Violet -> Blue)
-        const domeDist = Math.hypot((px + 0.04) * 1.15, (py - 0.66) * 1.38, (pz - 0.12) * 0.95);
-        let domeColorVal = 0;
-        if (py > 0.08 && pz > -0.22) {
-          // Maps center of dome (domeDist ~ 0) to 0.96 (cyan/mint) and outer ring to 0.16 (cobalt blue)
-          domeColorVal = Math.max(0, 0.98 - domeDist * 1.28) * smoothstep(0.06, 0.28, py) * smoothstep(0.42, 0.05, px);
-        }
-
-        // B. Mid & Lower Face Cobalt/Violet Base + Warm Facial Feature Hotspots (Nose, Lips, Chin)
-        const faceBlueBase = 0.18 * frontMask * leftFaceMask;
-
-        // Left brow & temple warm scarlet-magenta glow (matching left edge of image_bdb113.jpg)
-        const leftBrowWarm = gauss(px + 0.20, 0.12, py - 0.12, 0.14, pz - 0.36, 0.18) * 0.46;
-
-        // Projecting Nose Bridge & Nasal Tip hotspot (Crimson -> Orange -> Gold)
-        const noseHot = gauss(px + 0.02, 0.095, py + 0.03, 0.095, pz - 0.56, 0.16) * 0.58;
-
-        // Upper & Lower Lips + Chin warm thermal glow (Orange-Yellow core with Crimson-Violet halo)
-        const mouthChinHot = gauss(px + 0.05, 0.145, py + 0.24, 0.155, pz - 0.48, 0.18) * 0.65;
-
-        // Cheekbone & Eyelid subtle cyan/magenta accents
-        const cheekStreak = gauss(px - 0.06, 0.09, py + 0.08, 0.06, pz - 0.45, 0.14) * 0.36;
-
-        // Front-left neck cobalt-blue thermal flow (like Screenshot 2)
-        const neckBlue = neckLeftStreak * 0.22;
-
-        let tVal = Math.max(
-          domeColorVal,
-          faceBlueBase,
-          leftBrowWarm * frontMask,
-          noseHot * frontMask,
-          mouthChinHot * frontMask,
-          cheekStreak * frontMask,
-          neckBlue
-        );
-
-        tri.thermalBase = Math.max(0, Math.min(1, tVal));
+        const gr = g.createLinearGradient(ox - S, 0, ox + S, 0);
+        gr.addColorStop(0, "rgba(210,165,106,0)");
+        gr.addColorStop(.5, "rgba(210,165,106,.7)");
+        gr.addColorStop(1, "rgba(210,165,106,0)");
+        g.fillStyle = gr;
+        g.fillRect(ox - S, scanY, 2 * S, 1);
       }
-
-      for (let i = 0; i < headVertices.length; i++) {
-        const v = headVertices[i];
-        const len = Math.hypot(v.nx, v.ny, v.nz) || 1;
-        v.nx /= len; v.ny /= len; v.nz /= len;
-      }
-    }
-
-    /**
-     * Renders the 3D Polygon Human Head, Ear, Neck & Shoulders onto #face-canvas at 60fps
-     * with top-to-bottom progressive triangle build-in and a bold, high-contrast
-     * dark-edged horizontal scanner line sweeping top-to-bottom on the face.
-     */
-    function renderHeroPolygonFace(elapsed, revealY, scanY, scanActive) {
-      const canvas = document.getElementById('face-canvas');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      const w = canvas.width;
-      const h = canvas.height;
-
-      ctx.clearRect(0, 0, w, h);
-
-      // Smoothly interpolate head pose + lifelike breathing & head movement
-      const liveYaw = Math.sin(elapsed * 0.62) * 0.075 + Math.cos(elapsed * 0.29) * 0.03;
-      const livePitch = Math.sin(elapsed * 0.46) * 0.035;
-      const targetRx = basePose.x + userDragOffset.x + mouseParallax.x + livePitch;
-      const targetRy = basePose.y + userDragOffset.y + mouseParallax.y + liveYaw;
-
-      currentPose.x += (targetRx - currentPose.x) * 0.06;
-      currentPose.y += (targetRy - currentPose.y) * 0.06;
-      currentPose.z += (basePose.z - currentPose.z) * 0.06;
-
-      const cosX = Math.cos(currentPose.x), sinX = Math.sin(currentPose.x);
-      const cosY = Math.cos(currentPose.y), sinY = Math.sin(currentPose.y);
-      const cosZ = Math.cos(currentPose.z), sinZ = Math.sin(currentPose.z);
-
-      const fovScale = Math.min(w, h) * 0.96;
-      const camZ = 2.32;
-      const centerX = w * 0.54;
-      const centerY = h * 0.47 + Math.sin(elapsed * 0.95) * 3.5;
-
-      // 1. Transform & project all 3D vertices
-      for (let i = 0; i < headVertices.length; i++) {
-        const v = headVertices[i];
-
-        // Subtle outward ripple when the top-to-bottom scan band passes this vertex's Y coordinate
-        const scanDist = Math.abs(v.y - scanY);
-        const scanPulse = scanActive * Math.exp(-(scanDist * scanDist) / 0.008);
-        const disp = scanPulse * 0.014;
-
-        let x = v.x + v.nx * disp;
-        let y = v.y + v.ny * disp;
-        let z = v.z + v.nz * disp;
-
-        // Rotate around Y (Yaw - 3/4 left profile showing nose, lips, chin & right ear)
-        let x1 = x * cosY + z * sinY;
-        let z1 = -x * sinY + z * cosY;
-        let y1 = y;
-
-        // Rotate around X (Pitch)
-        let y2 = y1 * cosX - z1 * sinX;
-        let z2 = y1 * sinX + z1 * cosX;
-        let x2 = x1;
-
-        // Rotate around Z (Roll)
-        let x3 = x2 * cosZ - y2 * sinZ;
-        let y3 = x2 * sinZ + y2 * cosZ;
-        let z3 = z2;
-
-        const persp = fovScale / (camZ - z3);
-        v.px = centerX + x3 * persp;
-        v.py = centerY - y3 * persp;
-        v.pz = z3;
-      }
-
-      // 2. Filter visible triangles (Backface culling + Top-to-Bottom Build-In Threshold)
-      const visibleTris = [];
-      for (let i = 0; i < headTriangles.length; i++) {
-        const tri = headTriangles[i];
-
-        // Progressive top-to-bottom triangle pop-in along jagged polygonal frontier
-        const triThreshold = tri.cy + (tri.hash - 0.5) * 0.085;
-        if (triThreshold < revealY) continue;
-
-        // Smooth bottom shoulder cut-off
-        if (tri.cy < -1.04) continue;
-
-        const v0 = headVertices[tri.i0];
-        const v1 = headVertices[tri.i1];
-        const v2 = headVertices[tri.i2];
-
-        // Screen-space 2D cross product for backface culling
-        const crossZ = (v1.px - v0.px) * (v2.py - v0.py) - (v1.py - v0.py) * (v2.px - v0.px);
-        if (crossZ >= 0) continue; // Facing away from camera
-
-        tri.depth = (v0.pz + v1.pz + v2.pz) * 0.3333;
-        tri.triThreshold = triThreshold;
-        visibleTris.push(tri);
-      }
-
-      // Sort back-to-front (Painter's algorithm)
-      visibleTris.sort((a, b) => a.depth - b.depth);
-
-      // Compute screen Y position of the active horizontal scanner line
-      const activeScanModelY = revealY > -0.95 ? revealY : scanY;
-      const scanLineScreenY = centerY - activeScanModelY * (fovScale / camZ) * 0.96;
-
-      // 3. Draw Background Horizontal Scanner Guide Line behind the head
-      if (revealY > -0.95 || scanActive > 0.05) {
-        const bgLineGrad = ctx.createLinearGradient(w * 0.02, scanLineScreenY, w * 0.94, scanLineScreenY);
-        bgLineGrad.addColorStop(0, 'rgba(207, 167, 99, 0)');
-        bgLineGrad.addColorStop(0.18, 'rgba(207, 167, 99, 0.45)');
-        bgLineGrad.addColorStop(0.50, 'rgba(18, 7, 31, 0.85)');
-        bgLineGrad.addColorStop(0.82, 'rgba(207, 167, 99, 0.38)');
-        bgLineGrad.addColorStop(1, 'rgba(207, 167, 99, 0)');
-        ctx.strokeStyle = bgLineGrad;
-        ctx.lineWidth = 1.6;
-        ctx.beginPath();
-        ctx.moveTo(w * 0.02, scanLineScreenY);
-        ctx.lineTo(w * 0.94, scanLineScreenY);
-        ctx.stroke();
-      }
-
-      // 4. Render Faceted Thermal Polygons + Crisp Triangulated Wireframe Mesh
-      const drawnVertices = new Set();
-      let minFaceScanX = w;
-      let maxFaceScanX = 0;
-
-      for (let i = 0; i < visibleTris.length; i++) {
-        const tri = visibleTris[i];
-        const v0 = headVertices[tri.i0];
-        const v1 = headVertices[tri.i1];
-        const v2 = headVertices[tri.i2];
-
-        // Track horizontal span of the head at the current scan line height
-        if (Math.abs(tri.cy - activeScanModelY) < 0.055) {
-          minFaceScanX = Math.min(minFaceScanX, v0.px, v1.px, v2.px);
-          maxFaceScanX = Math.max(maxFaceScanX, v0.px, v1.px, v2.px);
-        }
-
-        // Rotate triangle normal to view space for crisp flat-faceted 3D shading
-        let nx = tri.fnx * cosY + tri.fnz * sinY;
-        let nz = -tri.fnx * sinY + tri.fnz * cosY;
-        let ny = tri.fny * cosX - nz * sinX;
-        nz = tri.fny * sinX + nz * cosX;
-
-        const facetLight = 0.78 + 0.34 * Math.max(0, nx * -0.45 + ny * 0.35 + nz * 0.82);
-
-        // Top-to-bottom scan band & build-in frontier highlight
-        const distToScan = Math.abs(tri.cy - scanY);
-        const scanBandOuter = scanActive * Math.exp(-(distToScan * distToScan) / 0.0065);
-        // Dark high-contrast core trench right on the scan line so it is clearly visible over bright colors
-        const scanCoreDark = scanActive * Math.exp(-(distToScan * distToScan) / 0.00065);
-
-        const frontierDist = Math.abs(tri.triThreshold - revealY);
-        const frontierGlow = (revealY > -0.95) ? Math.exp(-(frontierDist * frontierDist) / 0.0035) : 0;
-
-        // Subtle organic shimmer
-        const shimmer = Math.sin(tri.cx * 9 + tri.cy * 7 + elapsed * 1.1) * 0.018 * tri.activeMask;
-        const tColor = Math.min(1, tri.thermalBase + shimmer + frontierGlow * 0.32);
-
-        const [tr, tg, tb] = sampleFaceSpectrumRGB(tColor);
-
-        // Blend between dark aubergine (#1b0e2e) on the right side/ear/neck/shoulders
-        // and the vibrant thermal-iridescent spectrum on the facial features
-        const thermalBlend = smoothstep(0.03, 0.12, tColor);
-        const darkR = 25 * facetLight;
-        const darkG = 14 * facetLight;
-        const darkB = 40 * facetLight;
-
-        let r = mix(darkR, tr * facetLight, thermalBlend) + frontierGlow * 45;
-        let g = mix(darkG, tg * facetLight, thermalBlend) + frontierGlow * 85;
-        let b = mix(darkB, tb * facetLight, thermalBlend) + frontierGlow * 65;
-
-        // Darken polygons right inside the horizontal scanner trench for strong visual contrast
-        if (scanCoreDark > 0.05) {
-          const darkFactor = 1.0 - scanCoreDark * 0.72;
-          r *= darkFactor;
-          g *= darkFactor;
-          b *= darkFactor;
-        }
-
-        r = Math.min(255, Math.max(0, Math.round(r)));
-        g = Math.min(255, Math.max(0, Math.round(g)));
-        b = Math.min(255, Math.max(0, Math.round(b)));
-
-        const bustAlpha = smoothstep(-1.04, -0.86, tri.cy);
-
-        ctx.beginPath();
-        ctx.moveTo(v0.px, v0.py);
-        ctx.lineTo(v1.px, v1.py);
-        ctx.lineTo(v2.px, v2.py);
-        ctx.closePath();
-
-        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${bustAlpha.toFixed(2)})`;
-        ctx.fill();
-
-        // Crisp Triangulated Wireframe Overlay (clearly visible across both the thermal face,
-        // the 3D ear, and the dark aubergine side of the head/neck/shoulders)
-        const wireAlpha = (0.38 + scanBandOuter * 0.52 + frontierGlow * 0.45) * bustAlpha * smoothstep(-0.20, 0.35, nz + 0.28);
-        if (wireAlpha > 0.04) {
-          if (scanCoreDark > 0.35) {
-            // High-contrast dark-purple/black wireframe & gold highlight along the active scan line
-            ctx.strokeStyle = `rgba(18, 7, 32, ${Math.min(0.98, wireAlpha + 0.3).toFixed(2)})`;
-            ctx.lineWidth = 1.35;
-          } else if (scanBandOuter > 0.25) {
-            ctx.strokeStyle = `rgba(255, 236, 179, ${Math.min(0.95, wireAlpha).toFixed(2)})`;
-            ctx.lineWidth = 1.05;
-          } else {
-            ctx.strokeStyle = `rgba(232, 228, 248, ${Math.min(0.85, wireAlpha).toFixed(2)})`;
-            ctx.lineWidth = 0.74;
-          }
-          ctx.stroke();
-        }
-
-        if (bustAlpha > 0.22 && nz > -0.08) {
-          drawnVertices.add(tri.i0);
-          drawnVertices.add(tri.i1);
-          drawnVertices.add(tri.i2);
-        }
-      }
-
-      // 5. Render Subtle Vertex Pinpoint Dots at Polygon Intersections (matching Screenshot 2)
-      ctx.fillStyle = 'rgba(242, 238, 255, 0.62)';
-      drawnVertices.forEach((vIdx) => {
-        const v = headVertices[vIdx];
-        const scanBoost = scanActive * Math.exp(-Math.pow((v.y - scanY) / 0.08, 2));
-        const dotSize = scanBoost > 0.25 ? 2.3 : 1.45;
-        ctx.fillRect(v.px - dotSize * 0.5, v.py - dotSize * 0.5, dotSize, dotSize);
-      });
-
-      // 6. FOREGROUND HIGH-CONTRAST HORIZONTAL SCANNER LINE ACROSS THE FACE
-      //    Draws a bold dark-shadowed scanner bar + crisp gold/dark dual line right across
-      //    the face so the top-to-bottom scan is unmistakable over all colors.
-      if (revealY > -0.95 || scanActive > 0.05) {
-        const leftSpan = minFaceScanX < maxFaceScanX ? Math.max(w * 0.04, minFaceScanX - 48) : w * 0.18;
-        const rightSpan = minFaceScanX < maxFaceScanX ? Math.min(w * 0.95, maxFaceScanX + 48) : w * 0.86;
-
-        ctx.save();
-        // A. Wide dark shadow band across the face so the scanner stands out on bright cyan/yellow/blue
-        const bandHeight = 18;
-        const shadowBandGrad = ctx.createLinearGradient(0, scanLineScreenY - bandHeight, 0, scanLineScreenY + bandHeight);
-        shadowBandGrad.addColorStop(0, 'rgba(16, 6, 28, 0)');
-        shadowBandGrad.addColorStop(0.35, 'rgba(16, 6, 28, 0.58)');
-        shadowBandGrad.addColorStop(0.50, 'rgba(10, 3, 20, 0.86)');
-        shadowBandGrad.addColorStop(0.65, 'rgba(16, 6, 28, 0.58)');
-        shadowBandGrad.addColorStop(1, 'rgba(16, 6, 28, 0)');
-
-        ctx.fillStyle = shadowBandGrad;
-        ctx.fillRect(leftSpan, scanLineScreenY - bandHeight, rightSpan - leftSpan, bandHeight * 2);
-
-        // B. Bold dark core horizontal line across the face
-        const darkLineGrad = ctx.createLinearGradient(w * 0.02, scanLineScreenY, rightSpan, scanLineScreenY);
-        darkLineGrad.addColorStop(0, 'rgba(14, 5, 26, 0)');
-        darkLineGrad.addColorStop(0.15, 'rgba(14, 5, 26, 0.75)');
-        darkLineGrad.addColorStop(0.55, 'rgba(10, 3, 18, 0.96)');
-        darkLineGrad.addColorStop(0.90, 'rgba(14, 5, 26, 0.85)');
-        darkLineGrad.addColorStop(1, 'rgba(14, 5, 26, 0)');
-
-        ctx.strokeStyle = darkLineGrad;
-        ctx.lineWidth = 3.2;
-        ctx.beginPath();
-        ctx.moveTo(w * 0.02, scanLineScreenY);
-        ctx.lineTo(rightSpan, scanLineScreenY);
-        ctx.stroke();
-
-        // C. Crisp warm-gold / cyan scanner laser edge directly bordering the dark scanner line
-        const rimLineGrad = ctx.createLinearGradient(w * 0.02, scanLineScreenY - 1.8, rightSpan, scanLineScreenY - 1.8);
-        rimLineGrad.addColorStop(0, 'rgba(216, 178, 110, 0)');
-        rimLineGrad.addColorStop(0.18, 'rgba(216, 178, 110, 0.75)');
-        rimLineGrad.addColorStop(0.55, 'rgba(255, 234, 160, 0.95)');
-        rimLineGrad.addColorStop(0.88, 'rgba(0, 238, 232, 0.85)');
-        rimLineGrad.addColorStop(1, 'rgba(0, 238, 232, 0)');
-
-        ctx.strokeStyle = rimLineGrad;
-        ctx.lineWidth = 1.4;
-        ctx.beginPath();
-        ctx.moveTo(w * 0.02, scanLineScreenY - 1.8);
-        ctx.lineTo(rightSpan, scanLineScreenY - 1.8);
-        ctx.stroke();
-        ctx.restore();
-      }
-    }
-
-    function initHero3DFace() {
-      const container = document.getElementById('hero-face-canvas-container');
-      const canvas = document.getElementById('face-canvas');
-      if (!container || !canvas) return;
-
-      buildAnatomicalPolygonHead();
-
-      function syncCanvasSize() {
-        const rect = container.getBoundingClientRect();
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        const w = Math.max(360, rect.width || 620);
-        const h = Math.max(420, rect.height || 680);
-        canvas.width = Math.round(w * dpr);
-        canvas.height = Math.round(h * dpr);
-      }
-
-      syncCanvasSize();
-      window.addEventListener('resize', syncCanvasSize);
-
-      // Interactive Mouse Drag & Parallax on Hero Canvas
-      container.addEventListener('pointerdown', (e) => {
-        isDraggingHead = true;
-        dragStart.x = e.clientX;
-        dragStart.y = e.clientY;
-      });
-
-      window.addEventListener('pointermove', (e) => {
-        const rect = container.getBoundingClientRect();
-        if (rect.width > 0 && rect.height > 0) {
-          const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-          const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1;
-          if (nx >= -1.2 && nx <= 1.2 && ny >= -1.2 && ny <= 1.2) {
-            mouseParallax.x = ny * 0.045;
-            mouseParallax.y = nx * 0.065;
-          }
-        }
-        if (isDraggingHead) {
-          const dx = e.clientX - dragStart.x;
-          const dy = e.clientY - dragStart.y;
-          dragStart.x = e.clientX;
-          dragStart.y = e.clientY;
-          userDragOffset.y = Math.max(-0.75, Math.min(0.75, userDragOffset.y + dx * 0.0055));
-          userDragOffset.x = Math.max(-0.40, Math.min(0.40, userDragOffset.x + dy * 0.0045));
-        }
-      });
-
-      window.addEventListener('pointerup', () => {
-        isDraggingHead = false;
-      });
-    }
-
-    /**
-     * Smoothly updates the floating scan text ("Reading the eyes" -> "Reading the skin" ->
-     * "Reading the lips" -> "Reading the jawline") without any box or buttons.
-     */
-    function updateFloatingScanStage(newStageIdx) {
-      if (newStageIdx === activeStageIdx) return;
-      activeStageIdx = newStageIdx;
-      const stage = SCAN_STAGES[activeStageIdx];
-
-      basePose.x = stage.targetRot.x;
-      basePose.y = stage.targetRot.y;
-      basePose.z = stage.targetRot.z;
-
-      const wrap = document.getElementById('floating-scan-text-wrap');
-      const titleEl = document.getElementById('scan-stage-title');
-      const subEl = document.getElementById('scan-stage-subtitle');
-      if (!wrap || !titleEl || !subEl) return;
-
-      wrap.classList.remove('scan-text-visible');
-      wrap.classList.add('scan-text-hidden');
-
-      setTimeout(() => {
-        titleEl.textContent = stage.title;
-        subEl.textContent = stage.subtitle;
-        wrap.classList.remove('scan-text-hidden');
-        wrap.classList.add('scan-text-visible');
-      }, 190);
-    }
+      requestAnimationFrame(frame);
+    })();
 
     /*************************************************************************
      * 2. SCREEN NAVIGATION (Landing Hero Screen <-> Deepfake Analysis Lab)
@@ -1700,6 +1039,7 @@
 
     function openAnalysisLabScreen() {
       isLandingVisible = false;
+      document.body.dataset.view = "analyze";
       document.getElementById('landing-screen')?.classList.add('hidden');
       document.getElementById('analysis-screen')?.classList.remove('hidden');
       document.getElementById('back-to-hero-btn')?.classList.remove('hidden');
@@ -1709,6 +1049,7 @@
     function openLandingHeroScreen(e) {
       if (e) e.preventDefault();
       isLandingVisible = true;
+      document.body.dataset.view = "home";
       document.getElementById('analysis-screen')?.classList.add('hidden');
       document.getElementById('landing-screen')?.classList.remove('hidden');
       document.getElementById('back-to-hero-btn')?.classList.add('hidden');
