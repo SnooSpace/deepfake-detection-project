@@ -994,7 +994,9 @@
         // 1. Shaders: Thermal Face Fill
         const faceShaderUniforms = {
           uScanY: { value: 2.2 },
-          uScanActive: { value: 1.0 },
+          uScanActive: { value: 0.0 },
+          uConstructY: { value: 4.0 },
+          uIsConstructing: { value: 1.0 },
           uTime: { value: 0.0 }
         };
 
@@ -1006,9 +1008,11 @@
             varying vec3 vNormal;
             varying vec3 vWorldPos;
             varying vec3 vViewPosition;
+            varying float vModelY;
 
             void main() {
               vHeat = heat;
+              vModelY = position.y;
               vNormal = normalize(normalMatrix * normal);
               vec4 worldPos = modelMatrix * vec4(position, 1.0);
               vWorldPos = worldPos.xyz;
@@ -1020,10 +1024,13 @@
           fragmentShader: `
             uniform float uScanY;
             uniform float uScanActive;
+            uniform float uConstructY;
+            uniform float uIsConstructing;
             varying float vHeat;
             varying vec3 vNormal;
             varying vec3 vWorldPos;
             varying vec3 vViewPosition;
+            varying float vModelY;
 
             vec4 getSpectralHeatColor(float h) {
               if (h < 0.04) {
@@ -1060,6 +1067,8 @@
             }
 
             void main() {
+              if (uIsConstructing > 0.0 && vModelY < uConstructY) discard;
+
               vec3 n = normalize(vNormal);
               vec3 v = normalize(vViewPosition);
 
@@ -1078,7 +1087,13 @@
                 scanGlow = (1.0 - distScan / 0.25) * 0.45 * uScanActive;
               }
 
-              vec3 finalColor = heatCol.rgb * diff + rim + vec3(1.0, 0.85, 0.5) * scanGlow;
+              // Top-to-bottom construction frontier flash
+              float constructGlow = 0.0;
+              if (uIsConstructing > 0.0 && vModelY >= uConstructY && vModelY - uConstructY < 0.28) {
+                constructGlow = (1.0 - (vModelY - uConstructY) / 0.28) * 0.95 * uIsConstructing;
+              }
+
+              vec3 finalColor = heatCol.rgb * diff + rim + vec3(1.0, 0.85, 0.5) * scanGlow + vec3(1.0, 0.95, 0.7) * constructGlow;
               float bottomFade = smoothstep(-2.1, -1.3, vWorldPos.y);
               gl_FragColor = vec4(finalColor, heatCol.a * bottomFade);
             }
@@ -1094,14 +1109,19 @@
         const wireframeGeom = new THREE.WireframeGeometry(geometry);
         const wireShaderUniforms = {
           uScanY: { value: 2.2 },
-          uScanActive: { value: 1.0 }
+          uScanActive: { value: 0.0 },
+          uConstructY: { value: 4.0 },
+          uIsConstructing: { value: 1.0 }
         };
 
         const wireMaterial = new THREE.ShaderMaterial({
           uniforms: wireShaderUniforms,
           vertexShader: `
             varying vec3 vWorldPos;
+            varying float vModelY;
+
             void main() {
+              vModelY = position.y;
               vec4 wp = modelMatrix * vec4(position, 1.0);
               vWorldPos = wp.xyz;
               gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
@@ -1110,18 +1130,29 @@
           fragmentShader: `
             uniform float uScanY;
             uniform float uScanActive;
+            uniform float uConstructY;
+            uniform float uIsConstructing;
             varying vec3 vWorldPos;
+            varying float vModelY;
 
             void main() {
+              if (uIsConstructing > 0.0 && vModelY < uConstructY) discard;
+
               float dist = abs(vWorldPos.y - uScanY);
               float scanBoost = 0.0;
               if (uScanActive > 0.0 && dist < 0.22) {
                 scanBoost = (1.0 - dist / 0.22) * 0.7 * uScanActive;
               }
-              vec3 col = mix(vec3(0.92, 0.94, 0.98), vec3(1.0, 0.88, 0.55), scanBoost);
-              float alpha = 0.52 + scanBoost * 0.45;
+
+              float constructBoost = 0.0;
+              if (uIsConstructing > 0.0 && vModelY >= uConstructY && vModelY - uConstructY < 0.26) {
+                constructBoost = (1.0 - (vModelY - uConstructY) / 0.26) * uIsConstructing;
+              }
+
+              vec3 col = mix(vec3(0.92, 0.94, 0.98), vec3(1.0, 0.88, 0.55), max(scanBoost, constructBoost));
+              float alpha = 0.52 + scanBoost * 0.45 + constructBoost * 0.48;
               float bottomFade = smoothstep(-2.1, -1.3, vWorldPos.y);
-              gl_FragColor = vec4(col, alpha * bottomFade);
+              gl_FragColor = vec4(col, min(1.0, alpha) * bottomFade);
             }
           `,
           transparent: true,
@@ -1148,7 +1179,9 @@
         const pointShaderUniforms = {
           uTexture: { value: dotTexture },
           uScanY: { value: 2.2 },
-          uScanActive: { value: 1.0 }
+          uScanActive: { value: 0.0 },
+          uConstructY: { value: 4.0 },
+          uIsConstructing: { value: 1.0 }
         };
 
         const pointsMaterial = new THREE.ShaderMaterial({
@@ -1157,19 +1190,32 @@
             attribute float heat;
             varying float vHeat;
             varying vec3 vWorldPos;
+            varying float vModelY;
             uniform float uScanY;
             uniform float uScanActive;
+            uniform float uConstructY;
+            uniform float uIsConstructing;
 
             void main() {
               vHeat = heat;
+              vModelY = position.y;
               vec4 wp = modelMatrix * vec4(position, 1.0);
               vWorldPos = wp.xyz;
+
+              if (uIsConstructing > 0.0 && position.y < uConstructY) {
+                gl_PointSize = 0.0;
+                gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+                return;
+              }
 
               float dist = abs(wp.y - uScanY);
               float pSize = 3.6;
               if (heat > 0.5) pSize = 4.2;
               if (uScanActive > 0.0 && dist < 0.20) {
                 pSize += (1.0 - dist / 0.20) * 3.5;
+              }
+              if (uIsConstructing > 0.0 && position.y >= uConstructY && position.y - uConstructY < 0.32) {
+                pSize += (1.0 - (position.y - uConstructY) / 0.32) * 5.0 * uIsConstructing;
               }
 
               gl_PointSize = pSize * (8.0 / - (modelViewMatrix * vec4(position, 1.0)).z);
@@ -1180,9 +1226,14 @@
             uniform sampler2D uTexture;
             uniform float uScanY;
             uniform float uScanActive;
-            varying float vWorldPos;
+            uniform float uConstructY;
+            uniform float uIsConstructing;
+            varying vec3 vWorldPos;
+            varying float vModelY;
 
             void main() {
+              if (uIsConstructing > 0.0 && vModelY < uConstructY) discard;
+
               vec4 tex = texture2D(uTexture, gl_PointCoord);
               if (tex.a < 0.08) discard;
 
@@ -1192,11 +1243,17 @@
                 scanGlow = (1.0 - dist / 0.20) * uScanActive;
               }
 
-              vec3 col = vec3(1.0, 1.0, 1.0);
-              if (scanGlow > 0.0) {
-                col = mix(col, vec3(1.0, 0.9, 0.6), scanGlow);
+              float constructGlow = 0.0;
+              if (uIsConstructing > 0.0 && vModelY >= uConstructY && vModelY - uConstructY < 0.30) {
+                constructGlow = (1.0 - (vModelY - uConstructY) / 0.30) * uIsConstructing;
               }
-              float alpha = tex.a * (0.80 + scanGlow * 0.20);
+
+              vec3 col = vec3(1.0, 1.0, 1.0);
+              float glow = max(scanGlow, constructGlow);
+              if (glow > 0.0) {
+                col = mix(col, vec3(1.0, 0.92, 0.6), glow);
+              }
+              float alpha = tex.a * (0.80 + glow * 0.20);
               float bottomFade = smoothstep(-2.1, -1.3, vWorldPos.y);
               gl_FragColor = vec4(col, alpha * bottomFade);
             }
@@ -1270,7 +1327,8 @@
         window.addEventListener('resize', onResize);
 
         // Main 60 FPS Render Loop
-        const t0 = performance.now();
+        let t0 = null;
+        const buildDuration = 2.4; // Initial top-to-bottom construction duration
         const scanCycleTime = 6.8;
 
         function animate(now) {
@@ -1279,17 +1337,43 @@
           // Suspend rendering if not on home screen
           if (document.body.dataset.view && document.body.dataset.view !== "home") return;
 
-          const t = (now - t0) * 0.001;
+          if (t0 === null) t0 = now;
+          const elapsed = (now - t0) * 0.001;
 
-          // Gentle breathing float
-          const swayY = RM ? 0 : Math.sin(t * 0.6) * 0.04;
-          const nodX = RM ? 0 : Math.cos(t * 0.75) * 0.025;
+          // 1. TOP-TO-BOTTOM INITIAL CONSTRUCTION WAVE
+          let isConstructing = 0.0;
+          let constructY = -3.5;
 
-          // Parallax interpolation
+          if (elapsed < buildDuration && !RM) {
+            isConstructing = 1.0;
+            const p = Math.min(1.0, elapsed / buildDuration);
+            // Smooth easeOutCubic curve
+            const eased = 1.0 - Math.pow(1.0 - p, 2.4);
+            // Sweeps from top of skull (+3.8) down to base of neck (-2.6)
+            constructY = 3.8 - eased * 6.4;
+          } else if (elapsed < buildDuration + 0.35 && !RM) {
+            // Smooth settlement flash as neck connects
+            isConstructing = Math.max(0.0, 1.0 - (elapsed - buildDuration) / 0.35);
+            constructY = -2.6;
+          } else {
+            isConstructing = 0.0;
+            constructY = -10.0;
+          }
+
+          faceShaderUniforms.uConstructY.value = constructY;
+          faceShaderUniforms.uIsConstructing.value = isConstructing;
+          wireShaderUniforms.uConstructY.value = constructY;
+          wireShaderUniforms.uIsConstructing.value = isConstructing;
+          pointShaderUniforms.uConstructY.value = constructY;
+          pointShaderUniforms.uIsConstructing.value = isConstructing;
+
+          // 2. IDLE FLOATING & MOUSE PARALLAX
+          const swayY = RM ? 0 : Math.sin(elapsed * 0.6) * 0.04;
+          const nodX = RM ? 0 : Math.cos(elapsed * 0.75) * 0.025;
+
           const pY = mouseX * 0.08;
           const pX = mouseY * 0.05;
 
-          // Drag decay back to base
           if (!isDragging) {
             dragRotX *= 0.94;
             dragRotY *= 0.94;
@@ -1298,16 +1382,28 @@
           headGroup.rotation.y = BASE_YAW + swayY + pY + dragRotY;
           headGroup.rotation.x = BASE_PITCH + nodX - pX + dragRotX;
 
-          // Top-to-Bottom Scan Wave
-          const scanProgress = (t % scanCycleTime) / scanCycleTime;
-          const currentScanY = 2.6 - scanProgress * 4.5;
+          // 3. CONTINUOUS SCAN WAVE (smoothly kicks in as mesh completes)
+          const scanStartTime = 1.4;
+          let currentScanY = -10.0;
+          let scanActive = 0.0;
+
+          if (elapsed > scanStartTime) {
+            scanActive = Math.min(1.0, (elapsed - scanStartTime) / 0.8);
+            const scanT = elapsed - scanStartTime;
+            const scanProgress = (scanT % scanCycleTime) / scanCycleTime;
+            currentScanY = 2.6 - scanProgress * 4.5;
+          }
 
           faceShaderUniforms.uScanY.value = currentScanY;
+          faceShaderUniforms.uScanActive.value = scanActive;
           wireShaderUniforms.uScanY.value = currentScanY;
+          wireShaderUniforms.uScanActive.value = scanActive;
           pointShaderUniforms.uScanY.value = currentScanY;
+          pointShaderUniforms.uScanActive.value = scanActive;
 
           // Synchronize Editorial Floating Scan Stage Text
-          const activeZone = ZONES.find(z => currentScanY >= z.yMin) || ZONES[ZONES.length - 1];
+          const activeRefY = isConstructing > 0.0 ? constructY : currentScanY;
+          const activeZone = ZONES.find(z => activeRefY >= z.yMin) || ZONES[ZONES.length - 1];
           updateScanText(activeZone);
 
           renderer.render(scene, camera);
