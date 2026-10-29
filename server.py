@@ -155,6 +155,18 @@ def logo_svg():
     if not p.exists(): raise HTTPException(404)
     return FileResponse(p, media_type="image/svg+xml")
 
+@app.get("/three.min.js")
+def three_js():
+    p = HERE / "three.min.js"
+    if not p.exists(): raise HTTPException(404)
+    return FileResponse(p, media_type="application/javascript")
+
+@app.get("/head_model.js")
+def head_model():
+    p = HERE / "head_model.js"
+    if not p.exists(): raise HTTPException(404)
+    return FileResponse(p, media_type="application/javascript")
+
 @app.post("/api/analyze")
 async def analyze(file: UploadFile = File(...)):
     tmp = tempfile.NamedTemporaryFile(delete=False, suffix=Path(file.filename or "v.mp4").suffix or ".mp4")

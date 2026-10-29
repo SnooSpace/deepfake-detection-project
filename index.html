@@ -4,6 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Uncanny — Video and voice authenticity check</title>
+  <!-- Three.js 3D Engine & Forensic Polygon Head Model -->
+  <script src="three.min.js"></script>
+  <script>
+    if (typeof THREE === 'undefined') {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');
+    }
+  </script>
+  <script src="head_model.js"></script>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Google Fonts: Instrument Serif, Plus Jakarta Sans, JetBrains Mono -->
@@ -883,153 +891,432 @@
        ===================================================================== -->
   <script>
     /*************************************************************************
-     * 1. PROCEDURAL 3D HUMAN POLYGON HEAD ENGINE (Landing Face)
+     * 1. 3D FORENSIC POLYGON HEAD ENGINE (Authentic Mesh + Thermal Attention)
      *************************************************************************/
     (() => {
-      const cv0 = document.getElementById("head") || document.getElementById("face-canvas");
-      if (!cv0) return;
-      const g = cv0.getContext("2d");
+      const container = document.getElementById("hero-face-canvas-container");
+      const cv0 = document.getElementById("head");
+      if (!container || !cv0) return;
+
       const capT = document.getElementById("capT") || document.getElementById("scan-stage-title");
       const capS = document.getElementById("capS") || document.getElementById("scan-stage-subtitle");
       const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
-      let W = 0, H = 0, DPR = 1;
 
-      function fit() {
-        DPR = Math.min(devicePixelRatio || 1, 2);
-        const r = cv0.getBoundingClientRect();
-        W = r.width;
-        H = r.height;
-        cv0.width = Math.round(W * DPR);
-        cv0.height = Math.round(H * DPR);
-      }
-      addEventListener("resize", () => { W = 0; });
-
-      const LAT = 30, LON = 48, P = new Float32Array((LAT + 1) * LON * 3), R = new Float32Array(P.length);
-      let sd = 11;
-      const rnd = () => (sd = sd * 16807 % 2147483647) / 2147483647 - .5;
-      const BU = [
-        [-.3, .3, .9, .08, .3], [.3, .3, .9, .08, .3], [0, .3, .95, .05, .2],
-        [-.32, .2, .93, -.06, .2], [.32, .2, .93, -.06, .2], [0, .12, 1, .14, .16],
-        [0, -.1, 1, .18, .13], [-.14, -.1, .97, .05, .1], [.14, -.1, .97, .05, .1],
-        [-.55, 0, .8, .07, .3], [.55, 0, .8, .07, .3], [0, -.32, .96, .06, .14],
-        [0, -.45, .93, -.03, .1], [0, -.68, .82, .12, .22], [-.75, -.5, .4, .05, .3],
-        [.75, -.5, .4, .05, .3], [-1, -.05, -.1, .08, .25], [1, -.05, -.1, .08, .25]
+      // Scan Stages for Editorial Floating Text
+      const ZONES = [
+        { yMin: 0.9, title: "Reading the eyes", sub: "Blink rhythm and edge detail" },
+        { yMin: -0.1, title: "Reading the skin", sub: "Texture, shadow and lighting" },
+        { yMin: -0.9, title: "Reading the lips", sub: "Mouth shape against the sound" },
+        { yMin: -2.5, title: "Reading the jawline", sub: "Where the face meets the neck" }
       ];
 
-      for (let i = 0; i <= LAT; i++) {
-        for (let j = 0; j < LON; j++) {
-          const th = Math.PI * (.06 + .74 * (i + (i > 0 && i < LAT ? rnd() * .7 : 0)) / LAT);
-          const ph = Math.PI * 2 * ((j + rnd() * .7) / LON) - Math.PI;
-          const d0 = Math.sin(th) * Math.sin(ph), d1 = Math.cos(th), d2 = Math.sin(th) * Math.cos(ph);
-          let k = 1;
-          for (const b of BU) {
-            const e = (d0 - b[0]) ** 2 + (d1 - b[1]) ** 2 + (d2 - b[2]) ** 2;
-            k += b[3] * Math.exp(-e / (b[4] * b[4]));
-          }
-          const tp = 1 - .22 * Math.min(1, Math.max(0, -d1 * 1.3));
-          const o = (i * LON + j) * 3;
-          P[o] = d0 * .8 * tp * k;
-          P[o + 1] = d1 * 1.05 * k;
-          P[o + 2] = d2 * .95 * k;
-        }
-      }
-
-      const T = [], ix = (i, j) => i * LON + (j % LON);
-      for (let i = 0; i < LAT; i++) {
-        for (let j = 0; j < LON; j++) {
-          const a = ix(i, j), b = ix(i, j + 1), c = ix(i + 1, j), d = ix(i + 1, j + 1);
-          ((i + j) & 1) ? T.push(a, b, c, b, d, c) : T.push(a, b, d, a, d, c);
-        }
-      }
-
-      const zones = [
-        [0, .28, "Reading the eyes", "Blink rhythm and edge detail"],
-        [.28, .55, "Reading the skin", "Texture, shadow and lighting"],
-        [.55, .8, "Reading the lips", "Mouth shape against the sound"],
-        [.8, 1.01, "Reading the jawline", "Where the face meets the neck"]
-      ];
-      const ease = p => p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
-      const t0 = performance.now();
-
-      function frame(now) {
-        requestAnimationFrame(frame);
-        if (document.body.dataset.view && document.body.dataset.view !== "home") { W = 0; return; }
-        if (!W) { fit(); if (!W) return; }
-        const t = (now - t0) / 1000;
-        const yaw = -.55 + (RM ? 0 : .2 * Math.sin(t * .4));
-        const pit = -.2 + (RM ? 0 : .04 * Math.sin(t * .55));
-        const cyw = Math.cos(yaw), syw = Math.sin(yaw), cp = Math.cos(pit), sp = Math.sin(pit);
-        const S = H * .36, ox = W * .52, oy = H * .5;
-
-        for (let k = 0; k < P.length; k += 3) {
-          const x = P[k], y = P[k + 1], z = P[k + 2];
-          const x1 = x * cyw + z * syw, z1 = -x * syw + z * cyw;
-          R[k] = x1;
-          R[k + 1] = y * cp - z1 * sp;
-          R[k + 2] = y * sp + z1 * cp;
-        }
-
-        const top = oy - S * 1.05, bot = oy + S * .85;
-        const rev = RM ? 1 : Math.min(1, t / 3.4);
-        const ryy = rev < 1 ? top + (bot - top) * rev : 1e9;
-        const scanY = rev < 1 ? ryy : top + (bot - top) * ease(((t - 3.4) % 5.5) / 5.5);
-
-        if (rev >= 1) {
-          const p = (scanY - top) / (bot - top);
-          const z = zones.find(z => p >= z[0] && p < z[1]);
-          if (z && capT && capT.textContent !== z[2]) {
-            capT.textContent = z[2];
-            if (capS) capS.textContent = z[3];
+      function updateScanText(zone) {
+        if (!zone || !capT) return;
+        if (capT.textContent !== zone.title) {
+          const wrap = document.getElementById('floating-scan-text-wrap');
+          if (wrap) {
+            wrap.classList.remove('scan-text-visible');
+            wrap.classList.add('scan-text-hidden');
+            setTimeout(() => {
+              capT.textContent = zone.title;
+              if (capS) capS.textContent = zone.sub;
+              wrap.classList.remove('scan-text-hidden');
+              wrap.classList.add('scan-text-visible');
+            }, 180);
+          } else {
+            capT.textContent = zone.title;
+            if (capS) capS.textContent = zone.sub;
           }
         }
-
-        g.setTransform(DPR, 0, 0, DPR, 0, 0);
-        g.clearRect(0, 0, W, H);
-        g.lineJoin = "round";
-        g.lineWidth = .7;
-
-        const vis = [];
-        for (let i = 0; i < T.length; i += 3) {
-          const a = T[i] * 3, b = T[i + 1] * 3, c = T[i + 2] * 3;
-          const ux = R[b] - R[a], uy = R[b + 1] - R[a + 1], uz = R[b + 2] - R[a + 2];
-          const vx = R[c] - R[a], vy = R[c + 1] - R[a + 1], vz = R[c + 2] - R[a + 2];
-          let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
-          const mx = (R[a] + R[b] + R[c]) / 3, my = (R[a + 1] + R[b + 1] + R[c + 1]) / 3, mz = (R[a + 2] + R[b + 2] + R[c + 2]) / 3;
-          if (nx * mx + ny * my + nz * mz < 0) { nx = -nx; ny = -ny; nz = -nz; }
-          if (nz <= 0) continue;
-          vis.push([mz, i, nx, ny, nz, my]);
-        }
-        vis.sort((p, q) => p[0] - q[0]);
-
-        for (const v of vis) {
-          const i = v[1], a = T[i] * 3, b = T[i + 1] * 3, c = T[i + 2] * 3;
-          const sy = oy - v[5] * S;
-          if (sy > ryy) continue;
-          const l = Math.hypot(v[2], v[3], v[4]), nx = v[2] / l, ny = v[3] / l, nz = v[4] / l;
-          const u = Math.min(1, Math.max(0, nx * .4 + ny * .7 + nz * .6)), fr = 1 - nz;
-          const d = Math.abs(sy - scanY) / (H * .05), bo = d < 1 ? 1 - d : 0;
-          const fade = Math.min(1, Math.max(0, 1 - (-v[5] - .5) / .35));
-          const hue = (265 + (u * .85 + fr * .35) * 260) % 360;
-
-          g.fillStyle = `hsla(${hue | 0}, ${55 + 20 * u | 0}%, ${10 + 42 * Math.pow(u, 1.6) + 8 * fr + 28 * bo}%, ${.92 * fade})`;
-          g.strokeStyle = bo > 0 ? `rgba(210,165,106,${(.35 + .6 * bo) * fade})` : `rgba(239,230,216,${(.14 + .1 * u) * fade})`;
-          g.beginPath();
-          g.moveTo(ox + R[a] * S, oy - R[a + 1] * S);
-          g.lineTo(ox + R[b] * S, oy - R[b + 1] * S);
-          g.lineTo(ox + R[c] * S, oy - R[c + 1] * S);
-          g.closePath();
-          g.fill();
-          g.stroke();
-        }
-
-        const gr = g.createLinearGradient(ox - S, 0, ox + S, 0);
-        gr.addColorStop(0, "rgba(210,165,106,0)");
-        gr.addColorStop(.5, "rgba(210,165,106,.7)");
-        gr.addColorStop(1, "rgba(210,165,106,0)");
-        g.fillStyle = gr;
-        g.fillRect(ox - S, scanY, 2 * S, 1);
       }
-      requestAnimationFrame(frame);
+
+      function init3D() {
+        if (typeof THREE === 'undefined' || !window.HEAD_3D_DATA) {
+          setTimeout(init3D, 50);
+          return;
+        }
+
+        const data = window.HEAD_3D_DATA;
+
+        function b64ToUint16(b64) {
+          const bin = atob(b64);
+          const bytes = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+          return new Uint16Array(bytes.buffer);
+        }
+
+        function b64ToUint8(b64) {
+          const bin = atob(b64);
+          const bytes = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+          return bytes;
+        }
+
+        const normPos = b64ToUint16(data.posB64);
+        const rawIndices = b64ToUint16(data.idxB64);
+        const rawHeat = b64ToUint8(data.heatB64);
+
+        const numVerts = data.numVerts;
+        const positions = new Float32Array(numVerts * 3);
+        const heats = new Float32Array(numVerts);
+
+        const minP = data.min;
+        const maxP = data.max;
+        const span = [maxP[0] - minP[0], maxP[1] - minP[1], maxP[2] - minP[2]];
+
+        for (let i = 0; i < numVerts; i++) {
+          const o = i * 3;
+          positions[o]     = minP[0] + (normPos[o]     / 65535.0) * span[0];
+          positions[o + 1] = minP[1] + (normPos[o + 1] / 65535.0) * span[1];
+          positions[o + 2] = minP[2] + (normPos[o + 2] / 65535.0) * span[2];
+          heats[i] = rawHeat[i] / 255.0;
+        }
+
+        // Three.js Setup
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('heat', new THREE.BufferAttribute(heats, 1));
+        geometry.setIndex(new THREE.BufferAttribute(rawIndices, 1));
+        geometry.computeVertexNormals();
+
+        const scene = new THREE.Scene();
+        let width = container.clientWidth || 800;
+        let height = container.clientHeight || 780;
+
+        const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 100);
+        camera.position.set(0, 0.05, 12.2);
+
+        const renderer = new THREE.WebGLRenderer({ canvas: cv0, antialias: true, alpha: true, powerPreference: "high-performance" });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        renderer.setSize(width, height);
+        renderer.setClearColor(0x000000, 0);
+
+        // 1. Shaders: Thermal Face Fill
+        const faceShaderUniforms = {
+          uScanY: { value: 2.2 },
+          uScanActive: { value: 1.0 },
+          uTime: { value: 0.0 }
+        };
+
+        const faceMaterial = new THREE.ShaderMaterial({
+          uniforms: faceShaderUniforms,
+          vertexShader: `
+            attribute float heat;
+            varying float vHeat;
+            varying vec3 vNormal;
+            varying vec3 vWorldPos;
+            varying vec3 vViewPosition;
+
+            void main() {
+              vHeat = heat;
+              vNormal = normalize(normalMatrix * normal);
+              vec4 worldPos = modelMatrix * vec4(position, 1.0);
+              vWorldPos = worldPos.xyz;
+              vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+              vViewPosition = -mvPosition.xyz;
+              gl_Position = projectionMatrix * mvPosition;
+            }
+          `,
+          fragmentShader: `
+            uniform float uScanY;
+            uniform float uScanActive;
+            varying float vHeat;
+            varying vec3 vNormal;
+            varying vec3 vWorldPos;
+            varying vec3 vViewPosition;
+
+            vec4 getSpectralHeatColor(float h) {
+              if (h < 0.04) {
+                return vec4(0.06, 0.04, 0.09, 0.0);
+              }
+              vec3 c;
+              float alpha = 0.92;
+              if (h < 0.20) {
+                float t = (h - 0.04) / 0.16;
+                c = mix(vec3(0.04, 0.08, 0.65), vec3(0.14, 0.02, 0.78), t);
+                alpha = mix(0.35, 0.85, t);
+              } else if (h < 0.42) {
+                float t = (h - 0.20) / 0.22;
+                c = mix(vec3(0.14, 0.02, 0.78), vec3(0.95, 0.06, 0.12), t);
+                alpha = 0.88;
+              } else if (h < 0.62) {
+                float t = (h - 0.42) / 0.20;
+                c = mix(vec3(0.95, 0.06, 0.12), vec3(1.0, 0.54, 0.0), t);
+                alpha = 0.92;
+              } else if (h < 0.80) {
+                float t = (h - 0.62) / 0.18;
+                c = mix(vec3(1.0, 0.54, 0.0), vec3(1.0, 0.94, 0.02), t);
+                alpha = 0.95;
+              } else if (h < 0.93) {
+                float t = (h - 0.80) / 0.13;
+                c = mix(vec3(1.0, 0.94, 0.02), vec3(0.10, 0.96, 0.25), t);
+                alpha = 0.96;
+              } else {
+                float t = (h - 0.93) / 0.07;
+                c = mix(vec3(0.10, 0.96, 0.25), vec3(0.0, 0.92, 1.0), t);
+                alpha = 0.98;
+              }
+              return vec4(c, alpha);
+            }
+
+            void main() {
+              vec3 n = normalize(vNormal);
+              vec3 v = normalize(vViewPosition);
+
+              vec3 lightDir = normalize(vec3(-0.4, 0.7, 0.8));
+              float diff = max(0.0, dot(n, lightDir)) * 0.35 + 0.65;
+
+              float rim = 1.0 - max(0.0, dot(n, v));
+              rim = pow(rim, 3.0) * 0.25;
+
+              vec4 heatCol = getSpectralHeatColor(vHeat);
+              if (heatCol.a <= 0.01) discard;
+
+              float distScan = abs(vWorldPos.y - uScanY);
+              float scanGlow = 0.0;
+              if (uScanActive > 0.0 && distScan < 0.25) {
+                scanGlow = (1.0 - distScan / 0.25) * 0.45 * uScanActive;
+              }
+
+              vec3 finalColor = heatCol.rgb * diff + rim + vec3(1.0, 0.85, 0.5) * scanGlow;
+              float bottomFade = smoothstep(-2.1, -1.3, vWorldPos.y);
+              gl_FragColor = vec4(finalColor, heatCol.a * bottomFade);
+            }
+          `,
+          transparent: true,
+          side: THREE.FrontSide,
+          depthWrite: true
+        });
+
+        const faceMesh = new THREE.Mesh(geometry, faceMaterial);
+
+        // 2. Wireframe Lines
+        const wireframeGeom = new THREE.WireframeGeometry(geometry);
+        const wireShaderUniforms = {
+          uScanY: { value: 2.2 },
+          uScanActive: { value: 1.0 }
+        };
+
+        const wireMaterial = new THREE.ShaderMaterial({
+          uniforms: wireShaderUniforms,
+          vertexShader: `
+            varying vec3 vWorldPos;
+            void main() {
+              vec4 wp = modelMatrix * vec4(position, 1.0);
+              vWorldPos = wp.xyz;
+              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+          `,
+          fragmentShader: `
+            uniform float uScanY;
+            uniform float uScanActive;
+            varying vec3 vWorldPos;
+
+            void main() {
+              float dist = abs(vWorldPos.y - uScanY);
+              float scanBoost = 0.0;
+              if (uScanActive > 0.0 && dist < 0.22) {
+                scanBoost = (1.0 - dist / 0.22) * 0.7 * uScanActive;
+              }
+              vec3 col = mix(vec3(0.92, 0.94, 0.98), vec3(1.0, 0.88, 0.55), scanBoost);
+              float alpha = 0.52 + scanBoost * 0.45;
+              float bottomFade = smoothstep(-2.1, -1.3, vWorldPos.y);
+              gl_FragColor = vec4(col, alpha * bottomFade);
+            }
+          `,
+          transparent: true,
+          depthTest: true
+        });
+
+        const wireframeLines = new THREE.LineSegments(wireframeGeom, wireMaterial);
+
+        // 3. Vertex Dots / Point Cloud
+        const dotCanvas = document.createElement('canvas');
+        dotCanvas.width = 64; dotCanvas.height = 64;
+        const ctx = dotCanvas.getContext('2d');
+        const radGrad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+        radGrad.addColorStop(0, 'rgba(255,255,255,1.0)');
+        radGrad.addColorStop(0.55, 'rgba(255,255,255,0.95)');
+        radGrad.addColorStop(0.85, 'rgba(235,245,255,0.4)');
+        radGrad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = radGrad;
+        ctx.beginPath();
+        ctx.arc(32, 32, 30, 0, Math.PI * 2);
+        ctx.fill();
+        const dotTexture = new THREE.CanvasTexture(dotCanvas);
+
+        const pointShaderUniforms = {
+          uTexture: { value: dotTexture },
+          uScanY: { value: 2.2 },
+          uScanActive: { value: 1.0 }
+        };
+
+        const pointsMaterial = new THREE.ShaderMaterial({
+          uniforms: pointShaderUniforms,
+          vertexShader: `
+            attribute float heat;
+            varying float vHeat;
+            varying vec3 vWorldPos;
+            uniform float uScanY;
+            uniform float uScanActive;
+
+            void main() {
+              vHeat = heat;
+              vec4 wp = modelMatrix * vec4(position, 1.0);
+              vWorldPos = wp.xyz;
+
+              float dist = abs(wp.y - uScanY);
+              float pSize = 3.6;
+              if (heat > 0.5) pSize = 4.2;
+              if (uScanActive > 0.0 && dist < 0.20) {
+                pSize += (1.0 - dist / 0.20) * 3.5;
+              }
+
+              gl_PointSize = pSize * (8.0 / - (modelViewMatrix * vec4(position, 1.0)).z);
+              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+          `,
+          fragmentShader: `
+            uniform sampler2D uTexture;
+            uniform float uScanY;
+            uniform float uScanActive;
+            varying float vWorldPos;
+
+            void main() {
+              vec4 tex = texture2D(uTexture, gl_PointCoord);
+              if (tex.a < 0.08) discard;
+
+              float dist = abs(vWorldPos.y - uScanY);
+              float scanGlow = 0.0;
+              if (uScanActive > 0.0 && dist < 0.20) {
+                scanGlow = (1.0 - dist / 0.20) * uScanActive;
+              }
+
+              vec3 col = vec3(1.0, 1.0, 1.0);
+              if (scanGlow > 0.0) {
+                col = mix(col, vec3(1.0, 0.9, 0.6), scanGlow);
+              }
+              float alpha = tex.a * (0.80 + scanGlow * 0.20);
+              float bottomFade = smoothstep(-2.1, -1.3, vWorldPos.y);
+              gl_FragColor = vec4(col, alpha * bottomFade);
+            }
+          `,
+          transparent: true,
+          depthWrite: false
+        });
+
+        const pointCloud = new THREE.Points(geometry, pointsMaterial);
+
+        // Group & Transform
+        const headGroup = new THREE.Group();
+        headGroup.add(faceMesh);
+        headGroup.add(wireframeLines);
+        headGroup.add(pointCloud);
+
+        // Base Hero Pose (turned ~33° left, tilted ~8° up)
+        const BASE_YAW = -0.58;
+        const BASE_PITCH = 0.14;
+        const BASE_ROLL = -0.04;
+
+        headGroup.rotation.set(BASE_PITCH, BASE_YAW, BASE_ROLL);
+        headGroup.position.set(0.12, -0.42, 0);
+        scene.add(headGroup);
+
+        // Interactive Mouse Parallax & Drag Controls
+        let mouseX = 0, mouseY = 0;
+        let isDragging = false, prevPointerX = 0, prevPointerY = 0;
+        let dragRotX = 0, dragRotY = 0;
+
+        window.addEventListener('pointermove', (e) => {
+          const rect = container.getBoundingClientRect();
+          if (isDragging) {
+            const dx = e.clientX - prevPointerX;
+            const dy = e.clientY - prevPointerY;
+            prevPointerX = e.clientX;
+            prevPointerY = e.clientY;
+            dragRotY += dx * 0.007;
+            dragRotX += dy * 0.007;
+          } else {
+            const nx = (e.clientX - rect.left) / (rect.width || 1) * 2 - 1;
+            const ny = (e.clientY - rect.top) / (rect.height || 1) * 2 - 1;
+            mouseX = Math.max(-1.5, Math.min(1.5, nx));
+            mouseY = Math.max(-1.5, Math.min(1.5, ny));
+          }
+        });
+
+        container.addEventListener('pointerdown', (e) => {
+          isDragging = true;
+          prevPointerX = e.clientX;
+          prevPointerY = e.clientY;
+          container.style.cursor = 'grabbing';
+        });
+
+        window.addEventListener('pointerup', () => {
+          isDragging = false;
+          container.style.cursor = 'grab';
+        });
+
+        container.style.cursor = 'grab';
+
+        // Resize handling
+        function onResize() {
+          const w = container.clientWidth || 800;
+          const h = container.clientHeight || 780;
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+          renderer.setSize(w, h);
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        }
+        window.addEventListener('resize', onResize);
+
+        // Main 60 FPS Render Loop
+        const t0 = performance.now();
+        const scanCycleTime = 6.8;
+
+        function animate(now) {
+          requestAnimationFrame(animate);
+
+          // Suspend rendering if not on home screen
+          if (document.body.dataset.view && document.body.dataset.view !== "home") return;
+
+          const t = (now - t0) * 0.001;
+
+          // Gentle breathing float
+          const swayY = RM ? 0 : Math.sin(t * 0.6) * 0.04;
+          const nodX = RM ? 0 : Math.cos(t * 0.75) * 0.025;
+
+          // Parallax interpolation
+          const pY = mouseX * 0.08;
+          const pX = mouseY * 0.05;
+
+          // Drag decay back to base
+          if (!isDragging) {
+            dragRotX *= 0.94;
+            dragRotY *= 0.94;
+          }
+
+          headGroup.rotation.y = BASE_YAW + swayY + pY + dragRotY;
+          headGroup.rotation.x = BASE_PITCH + nodX - pX + dragRotX;
+
+          // Top-to-Bottom Scan Wave
+          const scanProgress = (t % scanCycleTime) / scanCycleTime;
+          const currentScanY = 2.6 - scanProgress * 4.5;
+
+          faceShaderUniforms.uScanY.value = currentScanY;
+          wireShaderUniforms.uScanY.value = currentScanY;
+          pointShaderUniforms.uScanY.value = currentScanY;
+
+          // Synchronize Editorial Floating Scan Stage Text
+          const activeZone = ZONES.find(z => currentScanY >= z.yMin) || ZONES[ZONES.length - 1];
+          updateScanText(activeZone);
+
+          renderer.render(scene, camera);
+        }
+
+        requestAnimationFrame(animate);
+      }
+
+      init3D();
     })();
 
     /*************************************************************************
@@ -1350,45 +1637,6 @@
       requestAnimationFrame(tick);
       v.scrollIntoView({ behavior: RM ? "auto" : "smooth", block: "nearest" });
     }
-
-    /*************************************************************************
-     * 4. INITIALIZATION & HERO 60FPS ANIMATION LOOP
-     *************************************************************************/
-    window.onload = function () {
-      initHero3DFace();
-
-      function animateLoop(now) {
-        requestAnimationFrame(animateLoop);
-        if (!isLandingVisible) return;
-        if (buildStartTime === null) buildStartTime = now;
-
-        const elapsed = (now - buildStartTime) * 0.001;
-
-        // 1. PHASE A: Top-to-Bottom Progressive Triangle Build-In (0.0s -> 2.7s)
-        const buildDuration = 2.7;
-        const buildProgress = Math.min(1.0, elapsed / buildDuration);
-        const easedBuild = 1.0 - Math.pow(1.0 - buildProgress, 2.1);
-        const revealY = 0.88 - easedBuild * 1.94;
-
-        // 2. PHASE B: Continuous Top-to-Bottom Scanning Wave & Automatic Stage Text Cycling
-        const scanCycleDuration = 8.8;
-        let scanY = 0.35;
-        let scanActive = 0.0;
-
-        if (elapsed > 1.8) {
-          scanActive = Math.min(1.0, (elapsed - 1.8) / 0.7);
-          const cyclePhase = ((elapsed - 1.8) % scanCycleDuration) / scanCycleDuration;
-          scanY = 0.58 - cyclePhase * 1.16;
-
-          const stageIndex = Math.min(3, Math.floor(cyclePhase * 4));
-          updateFloatingScanStage(stageIndex);
-        }
-
-        renderHeroPolygonFace(elapsed, revealY, scanY, scanActive);
-      }
-
-      requestAnimationFrame(animateLoop);
-    };
   </script>
 </body>
 </html>
